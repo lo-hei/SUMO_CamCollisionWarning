@@ -26,8 +26,8 @@ import sys
 import optparse
 import random
 
-from simulation_classes.routeManager import RouteManager
-from simulation_classes.simulationManager import SimulationManager
+from simulationClasses.routeManager import RouteManager
+from simulationClasses.simulationManager import SimulationManager
 
 # we need to import python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
@@ -62,7 +62,7 @@ def run():
 
     # this is the normal way of using traci. sumo is started as a
     # subprocess and then the python script connects and runs
-    traci.start([sumoBinary, "-c", "data/cross.sumocfg",
+    traci.start([sumoBinary, "-c", "simulationData/cross.sumocfg",
                  "--tripinfo-output", "tripinfo.xml",
                  "--step-length", str(step_length),
                  "--collision-output", "collisions.txt",
@@ -82,7 +82,7 @@ def run():
 
     collisions += len(traci.simulation.getCollisions())
 
-    traci.load([sumoBinary, "-c", "data/cross.sumocfg",
+    traci.load([sumoBinary, "-c", "simulationData/cross.sumocfg",
                  "--tripinfo-output", "tripinfo.xml",
                  "--step-length", str(step_length),
                  "--collision.mingap-factor", "0",
