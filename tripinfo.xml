@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2023-05-12 18:55:54 by Eclipse SUMO GUI Version 1.17.0
+<!-- generated on 2023-05-24 14:35:44 by Eclipse SUMO GUI Version 1.17.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="data/cross.net.xml"/>
-        <route-files value="data/cross.rou.xml"/>
+        <net-file value="simulationData/cross.net.xml"/>
+        <route-files value="simulationData/cross.rou.xml"/>
     </input>
 
     <output>
@@ -29,12 +29,11 @@
     </report>
 
     <traci_server>
-        <remote-port value="57153"/>
+        <remote-port value="58888"/>
     </traci_server>
 
 </configuration>
 -->
 
 <tripinfos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/tripinfo_file.xsd">
-    <tripinfo id="car_straight_0" depart="33.00" departLane="54o_0" departPos="5.10" departSpeed="0.00" departDelay="0.00" arrival="57.85" arrivalLane="53i_0" arrivalPos="10.00" arrivalSpeed="11.57" duration="24.85" routeLength="215.10" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="5.70" rerouteNo="0" devices="tripinfo_car_straight_0" vType="type_car" speedFactor="0.94" vaporized=""/>
 </tripinfos>

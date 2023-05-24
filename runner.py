@@ -82,7 +82,7 @@ def run():
 
     collisions += len(traci.simulation.getCollisions())
 
-    traci.load([sumoBinary, "-c", "simulationData/cross.sumocfg",
+    traci.load([sumoBinary, "-c", "data/cross.sumocfg",
                  "--tripinfo-output", "tripinfo.xml",
                  "--step-length", str(step_length),
                  "--collision.mingap-factor", "0",

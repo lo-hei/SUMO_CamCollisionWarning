@@ -1,14 +1,13 @@
 import random
 
-from tools.gpsAnalyser.gpsAnalyser import GpsAnalyser
-from tools.gpsAnalyser.gpsModel import GpsModel
-from tools.gpsAnalyser.helper import *
-import pandas as pd
+from tools.gpsAnalyser.utils.gpsAnalyser import GpsAnalyser
+from simulationClasses.GpsModel.gpsModel import GpsModel
+from tools.gpsAnalyser.utils.helper import *
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter
 
-from PIL import Image, ImageDraw
+from tools.gpsAnalyser.utils.orderPoints import order_points_neighbors_duplicates, order_points_neighbors
 
 
 class GpsModelTool(GpsAnalyser):
@@ -39,11 +38,10 @@ class GpsModelTool(GpsAnalyser):
             gps_model.load_model()
             self.model = gps_model
 
-        d_points = self.generate_points(seconds_to_simulate * 2)
-        d_points_ordered = self.order_points(d_points)
+        d_points = self.generate_points(seconds_to_simulate * 2, plot=False)
+        d_points_ordered = order_points_neighbors(d_points, plot_xlim=self.plot_xlim, plot_ylim=self.plot_ylim)
+        # d_points_ordered = order_points_neighbors_duplicates(d_points, plot_xlim=self.plot_xlim, plot_ylim=self.plot_ylim)
         self.plot_model_gps(d_points_ordered)
-
-
 
     def generate_heatmap(self, gps_file_name, plot=True):
         SIGMA = 2
@@ -150,114 +148,6 @@ class GpsModelTool(GpsAnalyser):
             plt.show()
 
         return d_points
-
-    def order_points(self, d_points, plot=True):
-        SHUFFLE_SIZE = 3
-        MAXIMAL_DISTANCE = 2
-
-        ordered_points = []
-        first_point = random.choice(d_points)
-        ordered_points.append(first_point)
-        d_points.remove(first_point)
-
-        while len(d_points) > 0:
-
-            # nearest neighbor jump
-            last_point = ordered_points[-1]
-            distances = []
-            for p in d_points:
-                d = math.dist(last_point, p)
-                distances.append(d)
-            min_dist = min(distances)
-            current_point_i = distances.index(min_dist)
-            current_point = d_points[current_point_i]
-
-            if min_dist < MAXIMAL_DISTANCE:
-                print("smaller than MAXIMAL_DISTANCE", min_dist)
-                ordered_points.append(current_point)
-                d_points.remove(current_point)
-            else:
-                print("greater than MAXIMAL_DISTANCE", min_dist)
-                # find nearest neighbor in already ordered points
-                distances_to_ordered = []
-                for o in ordered_points:
-                    d_o = math.dist(current_point, o)
-                    distances_to_ordered.append(d_o)
-                min_dist_ordered = min(distances_to_ordered)
-                min_dist_i_ordered = distances_to_ordered.index(min_dist_ordered)
-
-                # add point before or after this point
-                if min_dist_i_ordered > 0:
-                    distance_before = math.dist(current_point, ordered_points[min_dist_i_ordered - 1])
-                else:
-                    ordered_points.insert(0, current_point)
-                    d_points.remove(current_point)
-                    continue
-
-                if min_dist_i_ordered < (len(ordered_points) - 2):
-                    distance_after = math.dist(current_point, ordered_points[min_dist_i_ordered + 1])
-                else:
-                    ordered_points.append(current_point)
-                    d_points.remove(current_point)
-                    continue
-
-                if distance_before < distance_after:
-                    # add current_point_i before ordered_points[min_dist_i_ordered]
-                    ordered_points.insert(min_dist_i_ordered - 1, current_point)
-                    d_points.remove(current_point)
-                else:
-                    # add current_point_i after ordered_points[min_dist_i_ordered]
-                    ordered_points.insert(min_dist_i_ordered + 1, current_point)
-                    d_points.remove(current_point)
-
-        if plot:
-            plt.figure(figsize=(10, 5))
-
-            x, y = list(zip(*ordered_points))
-            plt.scatter(x, y, c=range(len(x)), cmap="viridis")
-
-            lc = colorline(x, y, cmap='viridis', linewidth=3)
-            ax = plt.gca()
-            ax.add_collection(lc)
-
-            plt.xlim(self.plot_xlim)
-            plt.ylim(self.plot_ylim)
-            plt.hlines(0, -50, 50, colors="black")
-            plt.vlines(0, -50, 50, colors="black")
-            plt.tight_layout()
-            plt.show()
-
-        return ordered_points
-
-    def find_neighbors(self, point, d_points, k):
-        distances = []
-        for p in d_points:
-            d = math.dist(point, p)
-            distances.append(d)
-
-        points_very_near = sum(i < 5 for i in distances)
-        if points_very_near < 10:
-            if len(d_points) > points_very_near:
-                k = points_very_near
-            else:
-                k = len(d_points)
-
-        max_distance = max(distances) + 1
-        distances_inverse = [(max_distance - d) ** 2 for d in distances]
-
-        neighbors = []
-        for _ in range(k):
-            if len(d_points) > 0:
-                neighbor_i = random.choices(range(len(d_points)), weights=distances_inverse, k=1)[0]
-
-            else:
-                return neighbors
-
-            neighbors.append(d_points[neighbor_i])
-            del distances_inverse[neighbor_i]
-            del d_points[neighbor_i]
-
-        return neighbors
 
     def plot_model_gps(self, d_points_ordered, dots=True):
         plt.figure(figsize=(10, 10))

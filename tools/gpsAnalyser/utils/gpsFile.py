@@ -14,11 +14,11 @@ class GpsFile:
         self.root_path = current_path.parent.parent.__str__()
 
         self.file_path = file_path
-        self.output_path = self.root_path + "\\output"
+        self.output_path = self.root_path + "\\src\\gpsData\\maps"
 
         self.gps_data = self.load_data()
 
-        self.map_path = self.root_path + "\\gpsData\\maps\\" + "canyon_hq_map.png"
+        self.map_path = self.root_path + "\\src\\gpsData\\maps\\" + "canyon_hq_map.png"
         self.map_points = [50.3674, 7.5679, 50.3626, 7.5827]
 
         image = Image.open(self.map_path, 'r')

@@ -11,7 +11,7 @@ class GpsModel:
         current_path = Path(os.path.dirname(os.path.abspath(__file__)))
         self.root_path = current_path.parent.parent.__str__()
         self.model_name = model_name
-        self.model_path = self.root_path + "\\models\\GpsModels\\" + model_name + "\\"
+        self.model_path = self.root_path + "\\models\\stored_GpsModels\\" + model_name + "\\"
 
         self.heatmap = None
         self.heatmap_size = None
@@ -64,3 +64,8 @@ class GpsModel:
         else:
             print("heatmap not set. Model not saved.")
             return False
+
+    def apply_inaccuracy(self, coordinates):
+        print("No apply_inaccuracy implemented. Normal coordinates are returned")
+        return coordinates
+

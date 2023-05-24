@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-import tools.gpsAnalyser.gpsFile as gpsFile
+import tools.gpsAnalyser.utils.gpsFile as gpsFile
 
 
 class GpsAnalyser:
@@ -18,7 +18,8 @@ class GpsAnalyser:
         file_plotter = {}
 
         for file in self.available_files:
-            file_path = self.root_path + "\\gpsData" + "\\" + self.gps_cam_log_name + "\\" + file + ".csv"
+            file_path = self.root_path + "\\src\\gpsData" + "\\" + self.gps_cam_log_name + "\\" + file + ".csv"
+            print(file_path)
             if os.path.exists(file_path):
                 print("GpsModelCreator : found ", self.gps_cam_log_name + "\\" + file)
                 gps_file_plotter = gpsFile.GpsFile(file_path=file_path)

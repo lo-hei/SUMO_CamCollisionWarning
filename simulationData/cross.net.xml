@@ -7,9 +7,9 @@
         <sumo-net-file value="simulationData/cross.net.xml"/>
     </input>
 
-    <output>
-        <output-file value="simulationData/cross.net.xml"/>
-    </output>
+    <maps>
+        <maps-file value="simulationData/cross.net.xml"/>
+    </maps>
 
     <processing>
         <geometry.min-radius.fix.railways value="false"/>
