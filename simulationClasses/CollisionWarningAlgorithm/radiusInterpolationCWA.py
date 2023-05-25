@@ -1,6 +1,6 @@
 import math
 
-from simulationClasses import helper
+from simulationClasses.utils import helper
 import simulationClasses.CollisionWarningAlgorithm.collisionWarningAlgorithm as cwa
 import simulationClasses.CollisionWarningAlgorithm.collisionWarningMessage as cwm
 

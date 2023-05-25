@@ -13,7 +13,7 @@ class CamProvider:
         self.vehicle = vehicle
 
         if self.vehicle.get_type() == "car":
-            vehicle_factor = 0.1
+            vehicle_factor = 0.4
         elif self.vehicle.get_type() == "bike":
             vehicle_factor = 1
 
@@ -33,6 +33,7 @@ class CamProvider:
         longitude = cooperative_awareness_message.longitude
 
         new_latitude, new_longitude = self.gps_model.apply_inaccuracy(latitude=latitude, longitude=longitude)
+        self.vehicle.add_cam_path_position(new_latitude, new_longitude)
 
         cooperative_awareness_message.latitude = new_latitude
         cooperative_awareness_message.longitude = new_longitude

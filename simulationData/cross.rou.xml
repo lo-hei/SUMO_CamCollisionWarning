@@ -3,6 +3,6 @@
 <vType id='type_bike' accel='1.2' decel='3' sigma='0.8' tau='0.3' length='1.6' minGap='1' maxSpeed='2.56' jmIgnoreFoeProb='0' jmIgnoreJunctionFoeProb='0' impatience='0' guiShape='bicycle'/>
 <route id='down_straight' edges='54o 4i 3o 53i' />
 <route id='left_straight' edges='51o 1i 2o 52i' />
-<vehicle id="bike_left_0" type="type_bike" route="left_straight" depart="0" />
+<vehicle id="bike_left_0" type="type_bike" route="left_straight" depart="1" />
 <vehicle id="car_straight_0" type="type_car" route="down_straight" depart="34" />
 </routes>

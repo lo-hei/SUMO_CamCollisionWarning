@@ -1,9 +1,10 @@
 import random
-import time
 
 import traci  # noqa
+from matplotlib import pyplot as plt
 
-from simulationClasses import helper
+from simulationClasses.utils import helper
+from simulationClasses.BikeController.speedController import SpeedController
 from simulationClasses.Vehicles.bikeClass import Bike
 from simulationClasses.Vehicles.carClass import Car
 from simulationClasses.CollisionWarningAlgorithm.collisionWarningAlgorithm import Risk
@@ -11,11 +12,17 @@ from simulationClasses.CollisionWarningAlgorithm.collisionWarningAlgorithm impor
 
 class SimulationManager:
 
-    def __init__(self, step_length):
-        self.activeVehicles = {}        # {vehicle_id: Vehicle}
+    def __init__(self, step_length, speed_controller):
+        self.activeVehicles = {}  # {vehicle_id: Vehicle}
+        self.inactiveVehicles = {}  # {vehicle_id: Vehicle}
         self.step_length = step_length
         self.time = 0
         self.dangerous_situation = False
+
+        if speed_controller:
+            self.speed_controller = SpeedController()
+        else:
+            self.speed_controller = None
 
         self.badVehicles = []
         self.goodVehicles = []
@@ -79,6 +86,7 @@ class SimulationManager:
         current_ids = self.activeVehicles.keys()
         inactive_ids = [i for i in current_ids if i not in activeVehicles_ids]
         for inactive in inactive_ids:
+            self.inactiveVehicles[inactive] = self.activeVehicles[inactive]
             del self.activeVehicles[inactive]
 
     def update_active_vehicles(self):
@@ -94,13 +102,15 @@ class SimulationManager:
                 else:
                     helper.color_vehicle_green(vehicle_id)
 
-
-
-    def simulationStep(self):
+    def simulation_step(self):
         # update
         self.looking_for_new_vehicles()
         self.deleting_inactive_vehicles()
         self.update_active_vehicles()
+
+        if self.speed_controller:
+            self.speed_controller.set_active_vehicles(self.activeVehicles)
+            self.speed_controller.update_vehicles()
 
         '''
         if self.dangerous_situation:
@@ -109,5 +119,26 @@ class SimulationManager:
 
         # self.create_bad_vehicles(rate=0.9)
         self.time += self.step_length
+
+    def plot_vehicle_paths(self):
+        plt.figure(figsize=(10, 10))
+
+        for vehicle_id in self.inactiveVehicles.keys():
+            real_path = self.inactiveVehicles[vehicle_id].real_path
+            y_real_path, x_real_path = zip(*real_path)
+
+            if self.inactiveVehicles[vehicle_id].get_type() == "bike":
+                color = "green"
+            elif self.inactiveVehicles[vehicle_id].get_type() == "car":
+                color = "red"
+
+            plt.plot(x_real_path, y_real_path, color=color, linestyle="-")
+
+            cam_path = self.inactiveVehicles[vehicle_id].cam_path
+            y_cam_path, x_cam_path = zip(*cam_path)
+            plt.plot(x_cam_path, y_cam_path, color=color, linestyle="--")
+
+        plt.tight_layout()
+        plt.show()
 
 

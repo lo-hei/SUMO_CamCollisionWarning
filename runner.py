@@ -45,11 +45,13 @@ def generate_routefile():
     get_bike_left_car_straight = routeManager.get_bike_straight_car_straight(repeats=1)
 
 def run():
-    gui = True
+    SPEED_CONTROL = False
+    PLOT_VEHICLE_PATHS = True
+    GUI = True
 
     # this script has been called from the command line. It will start sumo as a
     # server, then connect and run
-    if not gui:
+    if not GUI:
         sumoBinary = checkBinary('sumo')
     else:
         sumoBinary = checkBinary('sumo-gui')
@@ -71,14 +73,17 @@ def run():
 
     """execute the TraCI control loop"""
     step = 0
-    simulationManager = SimulationManager(step_length=step_length)
+    simulationManager = SimulationManager(step_length=step_length, speed_controller=SPEED_CONTROL)
 
     while traci.simulation.getMinExpectedNumber() > 0:
 
         traci.simulationStep()
-        simulationManager.simulationStep()
+        simulationManager.simulation_step()
 
         step += 1
+
+    if PLOT_VEHICLE_PATHS:
+        simulationManager.plot_vehicle_paths()
 
     collisions += len(traci.simulation.getCollisions())
 
