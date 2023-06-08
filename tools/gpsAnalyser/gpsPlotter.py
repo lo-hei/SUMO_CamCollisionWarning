@@ -30,13 +30,14 @@ class GpsPlotter(GpsAnalyser):
             file = self.file_plotter[file_name]
 
             coord, _ = file.get_coordinates()
-            interpolated, _ = file.get_interpolated_coordinates()
+            interpolated, _ = file.get_interpolated_coordinates(time_resolution=0.01)
 
             lat, long = zip(*coord)
             lat_new, long_new = zip(*interpolated)
 
-            plt.plot(long_new, lat_new)
+            plt.scatter(long_new, lat_new, s=15)
             if dots:
+                pass
                 plt.scatter(long, lat, s=15)
 
         plt.ylim(min(lat) - 0.0001, max(lat) + 0.0001)
@@ -52,7 +53,10 @@ class GpsPlotter(GpsAnalyser):
         comparison_coord, comparison_times = comparison_file.get_coordinates()
 
         baseline_interpolation, baseline_interpolation_times = \
-            baseline_file.get_interpolated_coordinates(time_resolution=0.05)
+            baseline_file.get_interpolated_coordinates(time_resolution=0.01)
+
+        print(len(baseline_interpolation), len(baseline_interpolation_times))
+        print(baseline_interpolation_times)
 
         distances = []
         deviation_points = []
@@ -70,6 +74,7 @@ class GpsPlotter(GpsAnalyser):
                 deltas.append(delta)
 
                 d = distance_earth(coord[0], coord[1], coord_b[0], coord_b[1])
+
                 d_point = point_distance_shift(coord[0], coord[1], coord_b[0], coord_b[1])
                 deviation_points.append(d_point)
                 distances.append(d)

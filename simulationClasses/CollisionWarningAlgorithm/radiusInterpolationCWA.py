@@ -8,7 +8,7 @@ import simulationClasses.CollisionWarningAlgorithm.collisionWarningMessage as cw
 class RadiusInterpolateCWA(cwa.CollisionWarningAlgorithm):
 
     def __init__(self, bike, radius):
-        super(RadiusInterpolateCWA , self).__init__(bike=bike)
+        super(RadiusInterpolateCWA, self).__init__(bike=bike)
         self.radius = radius
 
     def interpolate_other_position(self, current_other_cam):

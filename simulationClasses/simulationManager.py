@@ -136,6 +136,7 @@ class SimulationManager:
 
             cam_path = self.inactiveVehicles[vehicle_id].cam_path
             y_cam_path, x_cam_path = zip(*cam_path)
+            plt.plot(x_cam_path, y_cam_path, color=color)
             plt.plot(x_cam_path, y_cam_path, color=color, linestyle="--")
 
         plt.tight_layout()

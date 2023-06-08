@@ -14,11 +14,11 @@ class GpsFile:
         self.root_path = current_path.parent.parent.__str__()
 
         self.file_path = file_path
-        self.output_path = self.root_path + "\\src\\gpsData\\maps"
+        self.output_path = self.root_path + "\\src\\maps"
 
         self.gps_data = self.load_data()
 
-        self.map_path = self.root_path + "\\src\\gpsData\\maps\\" + "canyon_hq_map.png"
+        self.map_path = self.root_path + "\\src\\maps\\" + "canyon_hq_map.png"
         self.map_points = [50.3674, 7.5679, 50.3626, 7.5827]
 
         image = Image.open(self.map_path, 'r')
@@ -30,11 +30,10 @@ class GpsFile:
 
     def get_coordinates(self):
         coordinates = tuple(zip(self.gps_data['latitude'].values, self.gps_data['longitude'].values))
-        while coordinates[0] == (0.0, 0.0):
-            coordinates = coordinates[1:]
-
         times = self.gps_data['time'].values
-        while times[0] == 0:
+
+        while coordinates[0] == (0.0, 0.0) or times[0] == 0:
+            coordinates = coordinates[1:]
             times = times[1:]
 
         return coordinates, times
@@ -67,15 +66,23 @@ class GpsFile:
         return int(x), h_w[1] - int(y)
 
     def get_interpolated_coordinates(self, time_resolution=0.05):
+
         coordinates, times = self.get_coordinates()
         lat, long = zip(*coordinates)
 
+        print("Test:", coordinates[20], times[20])
+
         interpolated_times = np.arange(times[0], times[-1], time_resolution)
+        interpolated_times = np.append(interpolated_times, times)
+        np.sort(interpolated_times)
 
         param = np.linspace(times[0], times[-1], len(lat))
         spl = make_interp_spline(param, np.c_[lat, long], k=2)  # (1)
 
         lat_new, long_new = spl(interpolated_times).T
+
+        i = (np.abs(interpolated_times - 610379391.9)).argmin()
+        print("Test2:", lat_new[i], long_new[i], interpolated_times[i])
 
         interpolated_coord = list(zip(lat_new, long_new))
         return interpolated_coord, interpolated_times

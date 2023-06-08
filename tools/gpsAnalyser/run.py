@@ -9,10 +9,11 @@ def run():
                                         baseline_file="externalACM0_GPS")
 
     # gps_plotter.plot_gps_track_on_map("internal_GPS")
-    # gps_plotter.plot_gps_track_interpolation(file_names=["internal_GPS", "externalACM0_GPS"], dots=True)
-    gps_plotter.plot_gps_deviation(baseline="externalACM0_GPS", comparison="internal_GPS", style="heatmap")
+    gps_plotter.plot_gps_track_interpolation(file_names=["internal_GPS"], dots=True)
+    ''' styles = [histogram, map, drift, heatmap] '''
+    gps_plotter.plot_gps_deviation(baseline="externalACM0_GPS", comparison="externalACM0_GPS", style="map")
 
-    # gps_model_tool.create_model(gps_file="internal_GPS", model_name="GpsModels-internal")
+    # gps_model_tool.create_model(gps_file="externalACM0_GPS", model_name="GpsModels-internal")
     # gps_model_tool.use_model(model_name="stored_GpsModels-internal", seconds_to_simulate=15)
 
 

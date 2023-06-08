@@ -41,11 +41,11 @@ import traci  # noqa
 
 
 def generate_routefile():
-    routeManager = RouteManager()
-    get_bike_left_car_straight = routeManager.get_bike_straight_car_straight(repeats=1)
+    route_manager = RouteManager()
+    get_bike_left_car_straight = route_manager.get_bike_straight_car_straight(repeats=1)
 
 def run():
-    SPEED_CONTROL = False
+    SPEED_CONTROL = True
     PLOT_VEHICLE_PATHS = True
     GUI = True
 
