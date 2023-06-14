@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from tools.gpsAnalyser.utils.helper import colorline
 
 
-def order_points_neighbors(d_points, plot=True, plot_xlim=[-20, 20], plot_ylim=[-20, 20]):
+def order_points_neighbors(d_points, errors, plot=True, plot_xlim=[-20, 20], plot_ylim=[-20, 20]):
     SHUFFLE_SIZE = 3
     MAXIMAL_DISTANCE = 2
 
@@ -18,12 +18,41 @@ def order_points_neighbors(d_points, plot=True, plot_xlim=[-20, 20], plot_ylim=[
 
     while len(d_points) > 0:
 
-        # nearest neighbor jump
+        # nearest neighbor jump dependend on error-change
+
+        if len(errors) >= 2:
+            error_change = errors[len(ordered_points)] - errors[len(ordered_points) - 1]
+        else:
+            error_change = 0
+
+        # if error gets greater, move away from center
+        # if error gets smaller, move towards the center
+
         last_point = ordered_points[-1]
+        last_d_center = math.dist(last_point, [0, 0])
         distances = []
+        distances_to_center = []
+
         for p in d_points:
+            d_center = math.dist(p, [0, 0])
+            distances_to_center.append(d_center)
+
             d = math.dist(last_point, p)
-            distances.append(d)
+
+            if error_change > 0:
+                if d_center > last_d_center:
+                    distances.append(d)
+                else:
+                    distances.append(d + 1000)
+
+            elif error_change < 0:
+                if d_center < last_d_center:
+                    distances.append(d)
+                else:
+                    distances.append(d + 1000)
+            else:
+                distances.append(d)
+
         min_dist = min(distances)
         current_point_i = distances.index(min_dist)
         current_point = d_points[current_point_i]

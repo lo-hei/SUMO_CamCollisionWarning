@@ -27,6 +27,7 @@ class SimpleGpsModel(GpsModel):
         self.vehicle_factor = vehicle_factor
 
         self.d_points = []
+        self.errors = []
         self.ordered_points = []
 
         self.points_to_generate = 1000
@@ -36,7 +37,8 @@ class SimpleGpsModel(GpsModel):
         # change coordinates here
 
         if not self.d_points:
-            self.generate_points(points_to_generate=self.points_to_generate)
+            self.generate_points()
+            self.simulate_errors()
             self.order_points()
 
         if self.current_point == (self.points_to_generate - 1):
@@ -45,14 +47,64 @@ class SimpleGpsModel(GpsModel):
 
         shift_lat_m = self.ordered_points[self.current_point][0]
         shift_lon_m = self.ordered_points[self.current_point][1]
+        error = self.errors[self.current_point]
         self.current_point += 1
 
         new_lat = latitude + (shift_lat_m * self.vehicle_factor)
         new_lon = longitude + (shift_lon_m * self.vehicle_factor)
 
-        return new_lat, new_lon
+        return new_lat, new_lon, error
 
-    def generate_points(self, points_to_generate):
+    def simulate_errors(self):
+        LONGTIME = 20
+
+        sim_changes = []
+        sim_error = [self.mean_error]
+
+        for _ in range(self.points_to_generate):
+
+            values_changes = list(self.changes_probs.keys())
+            weights_changes = list(self.changes_probs.values())
+
+            if len(sim_changes) >= LONGTIME:
+                current_longtime_change = sim_changes[-LONGTIME] - sim_changes[-1]
+
+                for i, v in enumerate(values_changes):
+                    weight = weights_changes[i]
+
+                    add_weights = []
+                    for key, value in self.longtime_changes_probs.items():
+                        diff = abs(current_longtime_change - key)
+                        add_weights.append(diff * value)
+                    add_weights = [w / len(add_weights) for w in add_weights]
+
+                    rand_influence = random.choices(list(self.longtime_changes_probs.keys()), weights=add_weights, k=1)[0]
+                    longtime_influence = 0.5 * abs(rand_influence - v)
+                    if rand_influence > weight:
+                        weights_changes[i] = weight + longtime_influence
+                    if rand_influence < weight:
+                        weights_changes[i] = weight - longtime_influence
+
+                if min(weights_changes) < 0:
+                    weights_changes = [w + abs(min(weights_changes)) for w in weights_changes]
+
+            # make sure that the change will not bring the current value out of min-max-range
+            last_value = sim_error[-1]
+            for i, v in enumerate(values_changes):
+                if (last_value + v) < self.min_error or (last_value + v) > self.max_error:
+                    weights_changes[i] = 0
+
+            if np.random.uniform(0, 1) < self.prob_change:
+                change = random.choices(values_changes, weights=weights_changes, k=1)[0]
+            else:
+                change = 0
+
+            sim_changes.append(change)
+            sim_error.append(sim_error[-1] + change)
+
+        self.errors = sim_error
+
+    def generate_points(self):
 
         heatmap = self.heatmap
         heatmap_size = self.heatmap_size
@@ -80,7 +132,7 @@ class SimpleGpsModel(GpsModel):
             for x in x_coordinates:
                 coordinates_list.append((x, y))
 
-        d_points = random.choices(coordinates_list, weights=heatmap.flatten(), k=points_to_generate)
+        d_points = random.choices(coordinates_list, weights=heatmap.flatten(), k=self.points_to_generate)
 
         self.d_points = d_points
 
@@ -95,12 +147,41 @@ class SimpleGpsModel(GpsModel):
 
         while len(d_points) > 0:
 
-            # nearest neighbor jump
+            # nearest neighbor jump dependend on error-change
+
+            if len(self.errors) >= 2:
+                error_change = self.errors[len(ordered_points)] - self.errors[len(ordered_points) - 1]
+            else:
+                error_change = 0
+
+            # if error gets greater, move away from center
+            # if error gets smaller, move towards the center
+
             last_point = ordered_points[-1]
+            last_d_center = math.dist(last_point, [0, 0])
             distances = []
+            distances_to_center = []
+
             for p in d_points:
+                d_center = math.dist(p, [0, 0])
+                distances_to_center.append(d_center)
+
                 d = math.dist(last_point, p)
-                distances.append(d)
+
+                if error_change > 0:
+                    if d_center > last_d_center:
+                        distances.append(d)
+                    else:
+                        distances.append(d + 1000)
+
+                elif error_change < 0:
+                    if d_center < last_d_center:
+                        distances.append(d)
+                    else:
+                        distances.append(d + 1000)
+                else:
+                    distances.append(d)
+
             min_dist = min(distances)
             current_point_i = distances.index(min_dist)
             current_point = d_points[current_point_i]

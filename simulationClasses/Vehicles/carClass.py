@@ -14,7 +14,7 @@ class Car(vehicle.Vehicle):
         self.update_vehicle_attributes()
 
         # updating own cam message in cam_provider
-        self.cam_provider.get_current_cam()
+        self.cam_provider.get_current_cam(position_receiver=None)
 
     def get_type(self):
         return "car"

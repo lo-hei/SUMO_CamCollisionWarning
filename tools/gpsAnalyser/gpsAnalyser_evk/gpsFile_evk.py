@@ -1,11 +1,11 @@
-import math
 import os
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from PIL import Image
-from scipy.interpolate import make_interp_spline
+
+from bisect import bisect, bisect_left, bisect_right
 
 
 class GpsFile:
@@ -19,62 +19,40 @@ class GpsFile:
 
         self.gps_data = self.load_data()
 
-        self.map_path = self.root_path + "\\src\\maps\\" + "koblenz.png"
-        self.map_points = [50.36791, 7.55336, 50.33801, 7.58683]
+        self.map_path = self.root_path + "\\src\\maps\\" + "canyon_hq_map.png"
+        self.map_points = [50.3674, 7.5679, 50.3626, 7.5827]
 
         image = Image.open(self.map_path, 'r')
         self.map_size = [image.size[0], image.size[1]]
 
     def load_data(self):
-        file1 = open(self.file_path, 'r')
-        Lines = file1.readlines()
-
-        columns = ["time", "lat", "lon"]
-        df = pd.DataFrame(columns=columns)
-
-        for line in Lines:
-            if "PUBX" in line and "lat" in line and "lon" in line:
-                line_split = line.split(",")
-                for split in line_split:
-                    if "time" in split:
-                        pass
-
+        df = pd.read_csv(self.file_path, skipinitialspace=True)
         return df
 
     def get_coordinates(self):
-        lat_str = 'lat'
-        lon_str = 'lon'
-
-        coordinates = tuple(zip(self.gps_data[lat_str].values, self.gps_data[lon_str].values))
-        checked_coordinates = []
-        checked_times = []
-
+        coordinates = tuple(zip(self.gps_data['latitude'].values, self.gps_data['longitude'].values))
         times = self.gps_data['time'].values
 
-        for i in range(len(coordinates)):
-            if (not coordinates[i] == (0.0, 0.0)) and (not times[i] == 0) and (not str(times[i]) == "nan")\
-                    and (not math.isnan(coordinates[i][0])) and (not math.isnan(coordinates[i][1])):
-                checked_coordinates.append(coordinates[i])
+        while coordinates[0] == (0.0, 0.0) or times[0] == 0:
+            coordinates = coordinates[1:]
+            times = times[1:]
 
-                # convert time
-                current_time_str = str(times[i])
-                h_m_s = current_time_str.split(":")
-                current_time = 0
-                current_time += int(h_m_s[0]) * 60 * 60
-                current_time += int(h_m_s[1]) * 60
-                current_time += int(h_m_s[2])
+        return coordinates, times
 
-                if len(checked_times) > 0:
-                    if int(checked_times[-1]) == current_time:
-                        if current_time == checked_times[-1]:
-                            checked_times[-1] = int(checked_times[-1]) + 0.3
-                            current_time += 0.7
-                        else:
-                            current_time += 0.5
+    def get_coordinates_with_error(self):
+        errors = tuple(zip(self.gps_data['err_major'].values,
+                           self.gps_data['err_semi_major'].values,
+                           self.gps_data['error_semi_minor'].values))
 
-                checked_times.append(current_time)
+        coordinates = tuple(zip(self.gps_data['latitude'].values, self.gps_data['longitude'].values))
+        times = self.gps_data['time'].values
 
-        return checked_coordinates, checked_times
+        while coordinates[0] == (0.0, 0.0) or times[0] == 0:
+            coordinates = coordinates[1:]
+            times = times[1:]
+            errors = errors[1:]
+
+        return coordinates, times, errors
 
     def get_image_coordinates(self):
         img_points = []
@@ -105,14 +83,27 @@ class GpsFile:
 
     def get_interpolated_coordinates(self, time_resolution=0.05):
         coordinates, times = self.get_coordinates()
-        lat, long = zip(*coordinates)
+        lat, lon = zip(*coordinates)
 
         interpolated_times = np.arange(times[0], times[-1], time_resolution)
 
-        param = np.linspace(times[0], times[-1], len(lat))
-        spl = make_interp_spline(param, np.c_[lat, long], k=2)  # (1)
+        lat_new = [lat[0]]
+        lon_new = [lon[0]]
 
-        lat_new, long_new = spl(interpolated_times).T
+        for t in interpolated_times[1:-1]:
+            i = bisect_left(times, t)
 
-        interpolated_coord = list(zip(lat_new, long_new))
+            left_influence = (t - times[i - 1]) / (times[i] - times[i - 1])
+            right_influence = (times[i] - t) / (times[i] - times[i - 1])
+
+            lat_n = lat[i - 1] * left_influence + lat[i] * right_influence
+            lon_n = lon[i - 1] * left_influence + lon[i] * right_influence
+
+            lat_new.append(lat_n)
+            lon_new.append(lon_n)
+
+        lat_new.append(lat[-1])
+        lon_new.append(lon[-1])
+
+        interpolated_coord = list(zip(lat_new, lon_new))
         return interpolated_coord, interpolated_times

@@ -17,6 +17,13 @@ class GpsModel:
         self.heatmap_size = None
         self.gps_frequency = None  # Hz
 
+        self.mean_error = None
+        self.min_error = None
+        self.max_error = None
+        self.prob_change = None
+        self.changes_probs = None
+        self.longtime_changes_probs = None
+
     def load_model(self):
         if os.path.isdir(self.model_path):
             heatmap_path = self.model_path + "heatmap.txt"
@@ -27,6 +34,21 @@ class GpsModel:
                 parameters = json.load(j)
             self.heatmap_size = parameters['heatmap_size']
             self.gps_frequency = parameters['gps_frequency']
+
+            self.mean_error = float(parameters['mean_error'])
+            self.min_error = float(parameters['min_error'])
+            self.max_error = float(parameters['max_error'])
+            self.prob_change = float(parameters['prob_change'])
+
+            changes_probs = parameters['changes_probs']
+            self.changes_probs = {}
+            for k, v in changes_probs.items():
+                self.changes_probs[float(k)] = float(v)
+
+            longtime_changes_probs = parameters['longtime_changes_probs']
+            self.longtime_changes_probs = {}
+            for k, v in longtime_changes_probs.items():
+                self.longtime_changes_probs[float(k)] = float(v)
 
         else:
             print("Model not found. (", self.model_name, ")")
@@ -48,6 +70,13 @@ class GpsModel:
                     parameters = {}
                     parameters['heatmap_size'] = self.heatmap_size
                     parameters['gps_frequency'] = self.gps_frequency
+
+                    parameters['mean_error'] = self.mean_error
+                    parameters['min_error'] = self.min_error
+                    parameters['max_error'] = self.max_error
+                    parameters['prob_change'] = self.prob_change
+                    parameters['changes_probs'] = self.changes_probs
+                    parameters['longtime_changes_probs'] = self.longtime_changes_probs
 
                     parameter_path = self.model_path + "parameter.json"
                     with open(parameter_path, "w+") as j:

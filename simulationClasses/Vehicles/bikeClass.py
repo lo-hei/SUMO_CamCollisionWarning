@@ -41,7 +41,8 @@ class Bike(v.Vehicle):
             if vehicle_id == self.vehicle_id:
                 continue
 
-            current_vehicle_cam = vehicle.cam_provider.get_current_cam()
+            position_self = [self.latitude, self.longitude]
+            current_vehicle_cam = vehicle.cam_provider.get_current_cam(position_receiver=position_self)
             if current_vehicle_cam:
 
                 if vehicle_id not in self.received_cams.keys():
@@ -55,7 +56,7 @@ class Bike(v.Vehicle):
 
     def update_send_cam(self):
         # updates the own cams of the vehicle
-        current_cam = self.cam_provider.get_current_cam()
+        current_cam = self.cam_provider.get_current_cam(position_receiver=None)
         if len(self.send_cams) > 0:
             if not self.send_cams[-1].cam_id == current_cam.cam_id:
                 self.send_cams.append(current_cam)
