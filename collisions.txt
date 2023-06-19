@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2023-06-19 16:02:31 by Eclipse SUMO sumo Version 1.17.0
+<!-- generated on 2023-06-19 16:48:20 by Eclipse SUMO sumo Version 1.17.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
@@ -29,14 +29,16 @@
     </report>
 
     <traci_server>
-        <remote-port value="56497"/>
+        <remote-port value="57620"/>
     </traci_server>
 
 </configuration>
 -->
 
 <collisions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/collision_file.xsd">
-    <collision time="168.40" type="junction" lane=":0_1_0" pos="8.15" collider="car_straight_3" victim="bike_straight_3" colliderType="type_car" victimType="type_bike" colliderSpeed="8.66" victimSpeed="2.49"/>
-    <collision time="528.30" type="junction" lane=":0_4_0" pos="9.02" collider="car_straight_12" victim="bike_right_12" colliderType="type_car" victimType="type_bike" colliderSpeed="5.15" victimSpeed="2.48"/>
-    <collision time="609.00" type="junction" lane=":0_5_0" pos="11.88" collider="car_straight_14" victim="bike_left_14" colliderType="type_car" victimType="type_bike" colliderSpeed="9.38" victimSpeed="2.49"/>
+    <collision time="209.90" type="junction" lane=":0_7_0" pos="8.26" collider="car_straight_4" victim="bike_straight_4" colliderType="type_car" victimType="type_bike" colliderSpeed="4.59" victimSpeed="2.54"/>
+    <collision time="407.80" type="junction" lane=":0_8_0" pos="7.89" collider="car_straight_9" victim="bike_straight_9" colliderType="type_car" victimType="type_bike" colliderSpeed="5.15" victimSpeed="2.48"/>
+    <collision time="488.00" type="junction" lane=":0_4_0" pos="10.12" collider="car_straight_11" victim="bike_right_11" colliderType="type_car" victimType="type_bike" colliderSpeed="6.20" victimSpeed="2.54"/>
+    <collision time="647.60" type="junction" lane=":0_8_0" pos="9.41" collider="car_straight_15" victim="bike_straight_15" colliderType="type_car" victimType="type_bike" colliderSpeed="8.25" victimSpeed="2.54"/>
+    <collision time="727.90" type="junction" lane=":0_8_0" pos="7.54" collider="car_straight_17" victim="bike_right_17" colliderType="type_car" victimType="type_bike" colliderSpeed="4.74" victimSpeed="2.52"/>
 </collisions>

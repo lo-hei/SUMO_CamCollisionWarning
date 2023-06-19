@@ -277,6 +277,7 @@ class CwaEvaluator:
                 distances_real.append(math.dist([x_bike, y_bike], [x_car, y_car]))
                 distances_real_time.append(t_bike)
 
+        print(distances_real)
         ax.plot(distances_real_time, distances_real, color="blue", linestyle="-",
                 label="Distance calculated from real Positions")
 
@@ -295,38 +296,45 @@ class CwaEvaluator:
                 distances_cam.append(math.dist([x_bike, y_bike], [x_c, y_c]))
                 distances_cam_time.append(t_bike)
 
+        print(distances_cam)
         ax.plot(distances_cam_time, distances_cam, color="orange", linestyle="-",
                 label="Distance calculated from CAMs")
 
         # warning status
         warning_status_bike = []
-        for t, r in zip(*bike.cwa.risk_assessment_history):
-            highest_ws = Risk.NoRisk
-            for k, v in r.items():
-                if v > highest_ws.value:
-                    highest_ws = Risk(v).name
-            warning_status_bike.append(t, highest_ws)
+        times, risk_assessments = zip(*bike.cwa.risk_assessment_history)
+        risk_assessment_values = [d.values() for d in risk_assessments]
+        for t, l in zip(times, risk_assessment_values):
+            if len(l) > 0:
+                max_risk = Risk(max([v.value for v in l]))
+            else:
+                max_risk = Risk.NoRisk
+            warning_status_bike.append([t, max_risk])
 
-        current_ws = warning_status_bike[0][0]
-        start_ws_time = warning_status_bike[0][1]
+        current_ws = warning_status_bike[0][1]
+        start_ws_time = warning_status_bike[0][0]
+
+        print(warning_status_bike)
 
         for ws in warning_status_bike:
-            if ws[0] == current_ws:
+            if ws[1] == current_ws:
                 continue
             else:
                 if current_ws.value == 0:
                     pass
                 elif current_ws.value == 1:
-                    ax.axvspan(start_ws_time, ws[1], alpha=0.3, color='yellow')
+                    ax.axvspan(start_ws_time, ws[0], alpha=0.3, color='yellow')
                 elif current_ws.value == 2:
-                    ax.axvspan(start_ws_time, ws[1], alpha=0.3, color='red')
+                    ax.axvspan(start_ws_time, ws[0], alpha=0.3, color='red')
 
-                current_ws = ws[0]
-                start_ws_time = ws[1]
+                current_ws = ws[1]
+                start_ws_time = ws[0]
 
+        '''
         ax.set_ylim([0, max(max(distances_cam), max(distances_real))])
         # ax.set_xlim([min(min(distances_real_time), min(distances_cam_time)), max(max(time_bike), max(time_car))])
         ax.set_xlim([min(min(distances_real_time), min(distances_cam_time)), 60])
+        '''
 
         plt.legend()
         plt.tight_layout()
