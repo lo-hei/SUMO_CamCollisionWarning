@@ -1,8 +1,56 @@
 <routes>
-<vType id='type_car' accel='2' decel='4.5' sigma='0.8' tau='0.6' length='5' minGap='2.5' maxSpeed='12' jmIgnoreFoeProb='0' jmIgnoreJunctionFoeProb='0' impatience='1' guiShape='passenger'/>
-<vType id='type_bike' accel='1.2' decel='3' sigma='0.8' tau='0.3' length='1.6' minGap='1' maxSpeed='2.56' jmIgnoreFoeProb='0' jmIgnoreJunctionFoeProb='0' impatience='1' guiShape='bicycle'/>
-<route id='down_straight' edges='54o 4i 3o 53i' />
+<vType id='type_car' accel='2' decel='4.5' sigma='0.8' tau='0.6' length='5' minGap='2.5' maxSpeed='12' jmIgnoreFoeProb='1' jmIgnoreJunctionFoeProb='1' impatience='1' guiShape='passenger'/>
+<vType id='type_bike' accel='1.2' decel='3' sigma='0.8' tau='0.3' length='1.6' minGap='1' maxSpeed='2.56' jmIgnoreFoeProb='1' jmIgnoreJunctionFoeProb='1' impatience='1' guiShape='bicycle'/>
 <route id='left_straight' edges='51o 1i 2o 52i' />
-<vehicle id="bike_left_0" type="type_bike" route="left_straight" depart="0" />
-<vehicle id="car_straight_0" type="type_car" route="down_straight" depart="32" />
+<route id='left_turnLeft' edges='51o 1i 3o 53i' />
+<route id='left_turnRight' edges='51o 1i 4o 54i' />
+<route id='right_straight' edges='52o 2i 1o 51i' />
+<route id='right_turnLeft' edges='52o 2i 3o 53i' />
+<route id='right_turnRight' edges='52o 2i 4o 54i' />
+<route id='up_straight' edges='54o 4i 3o 53i' />
+<route id='up_turnLeft' edges='54o 4i 2o 52i' />
+<route id='up_turnRight' edges='54o 4i 1o 51i' />
+<route id='down_straight' edges='53o 3i 4o 54i' />
+<route id='down_turnLeft' edges='53o 3i 1o 51i' />
+<route id='down_turnRight' edges='53o 3i 2o 52i' />
+<vehicle id="bike_left_0" type="type_bike" route="left_turnLeft" depart="2" />
+<vehicle id="car_straight_0" type="type_car" route="right_turnLeft" depart="34" />
+<vehicle id="bike_right_1" type="type_bike" route="left_turnRight" depart="41" />
+<vehicle id="car_straight_1" type="type_car" route="up_straight" depart="73" />
+<vehicle id="bike_straight_2" type="type_bike" route="left_straight" depart="80" />
+<vehicle id="car_straight_2" type="type_car" route="down_straight" depart="113" />
+<vehicle id="bike_straight_3" type="type_bike" route="left_straight" depart="120" />
+<vehicle id="car_straight_3" type="type_car" route="up_straight" depart="154" />
+<vehicle id="bike_straight_4" type="type_bike" route="left_straight" depart="161" />
+<vehicle id="car_straight_4" type="type_car" route="down_turnLeft" depart="192" />
+<vehicle id="bike_right_5" type="type_bike" route="left_turnRight" depart="201" />
+<vehicle id="car_straight_5" type="type_car" route="up_turnRight" depart="232" />
+<vehicle id="bike_straight_6" type="type_bike" route="left_straight" depart="240" />
+<vehicle id="car_straight_6" type="type_car" route="down_straight" depart="272" />
+<vehicle id="bike_left_7" type="type_bike" route="left_turnLeft" depart="280" />
+<vehicle id="car_straight_7" type="type_car" route="right_turnRight" depart="312" />
+<vehicle id="bike_left_8" type="type_bike" route="left_turnLeft" depart="320" />
+<vehicle id="car_straight_8" type="type_car" route="up_turnLeft" depart="352" />
+<vehicle id="bike_left_9" type="type_bike" route="left_turnLeft" depart="361" />
+<vehicle id="car_straight_9" type="type_car" route="down_turnLeft" depart="393" />
+<vehicle id="bike_straight_10" type="type_bike" route="left_straight" depart="401" />
+<vehicle id="car_straight_10" type="type_car" route="up_straight" depart="433" />
+<vehicle id="bike_left_11" type="type_bike" route="left_turnLeft" depart="440" />
+<vehicle id="car_straight_11" type="type_car" route="up_turnRight" depart="473" />
+<vehicle id="bike_right_12" type="type_bike" route="left_turnRight" depart="480" />
+<vehicle id="car_straight_12" type="type_car" route="right_straight" depart="512" />
+<vehicle id="bike_left_13" type="type_bike" route="left_turnLeft" depart="522" />
+<vehicle id="car_straight_13" type="type_car" route="down_turnRight" depart="553" />
+<vehicle id="bike_left_14" type="type_bike" route="left_turnLeft" depart="560" />
+<vehicle id="car_straight_14" type="type_car" route="right_turnLeft" depart="594" />
+<vehicle id="bike_straight_15" type="type_bike" route="left_straight" depart="601" />
+<vehicle id="car_straight_15" type="type_car" route="up_turnRight" depart="633" />
+<vehicle id="bike_right_16" type="type_bike" route="left_turnRight" depart="641" />
+<vehicle id="car_straight_16" type="type_car" route="right_turnLeft" depart="673" />
+<vehicle id="bike_straight_17" type="type_bike" route="left_straight" depart="680" />
+<vehicle id="car_straight_17" type="type_car" route="up_straight" depart="712" />
+<vehicle id="bike_straight_18" type="type_bike" route="left_straight" depart="721" />
+<vehicle id="car_straight_18" type="type_car" route="down_turnRight" depart="752" />
+<vehicle id="bike_straight_19" type="type_bike" route="left_straight" depart="761" />
+<vehicle id="car_straight_19" type="type_car" route="up_straight" depart="793" />
 </routes>

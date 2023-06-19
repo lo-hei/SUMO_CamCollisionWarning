@@ -1,8 +1,11 @@
+import math
 import random
 
+import numpy as np
 import traci  # noqa
 from matplotlib import pyplot as plt
 
+from simulationClasses.routeManager import RouteManager
 from simulationClasses.utils import helper
 from simulationClasses.BikeController.speedController import SpeedController
 from simulationClasses.Vehicles.bikeClass import Bike
@@ -12,12 +15,14 @@ from simulationClasses.CollisionWarningAlgorithm.collisionWarningAlgorithm impor
 
 class SimulationManager:
 
-    def __init__(self, step_length, speed_controller):
+    def __init__(self, step_length, speed_controller, evaluator):
         self.activeVehicles = {}  # {vehicle_id: Vehicle}
         self.inactiveVehicles = {}  # {vehicle_id: Vehicle}
         self.step_length = step_length
         self.time = 0
         self.dangerous_situation = False
+
+        self.evaluator = evaluator
 
         if speed_controller:
             self.speed_controller = SpeedController()
@@ -71,6 +76,10 @@ class SimulationManager:
                 if "bike" in v_id:
                     # create new bike
                     new_bike = Bike(vehicle_id=v_id, simulation_manager=self)
+
+                    if self.evaluator:
+                        new_bike.cwa = self.evaluator.cwa(new_bike)
+
                     self.activeVehicles[v_id] = new_bike
                     helper.color_vehicle_green(v_id)
                 elif "car" in v_id:
@@ -89,14 +98,17 @@ class SimulationManager:
             self.inactiveVehicles[inactive] = self.activeVehicles[inactive]
             del self.activeVehicles[inactive]
 
+        self.evaluator.vehicles = self.inactiveVehicles
+
     def update_active_vehicles(self):
         for vehicle_id in self.activeVehicles.keys():
             self.activeVehicles[vehicle_id].update()
+
             if "bike" in vehicle_id:
                 if self.activeVehicles[vehicle_id].cwa.get_current_risk().value >= Risk.Collision.value:
                     self.dangerous_situation = True
                     helper.color_vehicle_red(vehicle_id)
-                elif self.activeVehicles[vehicle_id].cwa.get_current_risk().value >= Risk.SendWarning.value:
+                elif self.activeVehicles[vehicle_id].cwa.get_current_risk().value >= Risk.Warning.value:
                     self.dangerous_situation = True
                     helper.color_vehicle_yellow(vehicle_id)
                 else:
@@ -119,27 +131,5 @@ class SimulationManager:
 
         # self.create_bad_vehicles(rate=0.9)
         self.time += self.step_length
-
-    def plot_vehicle_paths(self):
-        plt.figure(figsize=(10, 10))
-
-        for vehicle_id in self.inactiveVehicles.keys():
-            real_path = self.inactiveVehicles[vehicle_id].real_path
-            y_real_path, x_real_path = zip(*real_path)
-
-            if self.inactiveVehicles[vehicle_id].get_type() == "bike":
-                color = "green"
-            elif self.inactiveVehicles[vehicle_id].get_type() == "car":
-                color = "red"
-
-            plt.plot(x_real_path, y_real_path, color=color, linestyle="-")
-
-            cam_path = self.inactiveVehicles[vehicle_id].cam_path
-            y_cam_path, x_cam_path = zip(*cam_path)
-            plt.plot(x_cam_path, y_cam_path, color=color)
-            plt.plot(x_cam_path, y_cam_path, color=color, linestyle="--")
-
-        plt.tight_layout()
-        plt.show()
 
 

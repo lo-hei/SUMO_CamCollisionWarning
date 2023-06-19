@@ -21,11 +21,18 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import math
 import os
 import sys
 import optparse
 import random
 
+from time import sleep
+from tqdm import tqdm
+
+from simulationClasses.CollisionWarningAlgorithm.radiusCWA import RadiusCWA
+from simulationClasses.CollisionWarningAlgorithm.radiusInterpolationCWA import RadiusInterpolateCWA
+from simulationClasses.cwaEvaluator import CwaEvaluator
 from simulationClasses.routeManager import RouteManager
 from simulationClasses.simulationManager import SimulationManager
 
@@ -40,14 +47,25 @@ from sumolib import checkBinary  # noqa
 import traci  # noqa
 
 
-def generate_routefile():
-    route_manager = RouteManager()
-    get_bike_left_car_straight = route_manager.get_bike_straight_car_straight(repeats=1)
-
 def run():
-    SPEED_CONTROL = True
-    PLOT_VEHICLE_PATHS = True
-    GUI = True
+    SPEED_CONTROL = False
+    GUI = False
+
+    step_length = 0.1
+
+    ''' 
+    evaluation_mode 
+    0: NO EVALUATION
+    1: PLOT_VEHICLE_PATHS
+    2: PLOT_DISTANCE_CAM_CWA
+    3: EVALUATE_CWA
+    '''
+    runs = 20
+    evaluation_mode = 3
+    evaluator = CwaEvaluator(runs=runs, cwa=RadiusInterpolateCWA, evaluation_mode=evaluation_mode)
+
+    simulationManager = SimulationManager(step_length=step_length,
+                                          speed_controller=SPEED_CONTROL, evaluator=evaluator)
 
     # this script has been called from the command line. It will start sumo as a
     # server, then connect and run
@@ -55,12 +73,6 @@ def run():
         sumoBinary = checkBinary('sumo')
     else:
         sumoBinary = checkBinary('sumo-gui')
-
-    collisions = 0
-
-    # first, generate the route file for this simulation
-    generate_routefile()
-    step_length = 0.01
 
     # this is the normal way of using traci. sumo is started as a
     # subprocess and then the python script connects and runs
@@ -72,20 +84,18 @@ def run():
                  "--collision.check-junctions"])
 
     """execute the TraCI control loop"""
-    step = 0
-    simulationManager = SimulationManager(step_length=step_length, speed_controller=SPEED_CONTROL)
+    p_bar = tqdm(range(runs))
 
     while traci.simulation.getMinExpectedNumber() > 0:
 
         traci.simulationStep()
         simulationManager.simulation_step()
 
-        step += 1
+        current_run = math.ceil(simulationManager.time / simulationManager.evaluator.route_manager.gap_between_repeats)
+        p_bar.n = current_run
+        p_bar.refresh()
 
-    if PLOT_VEHICLE_PATHS:
-        simulationManager.plot_vehicle_paths()
-
-    collisions += len(traci.simulation.getCollisions())
+    evaluator.evaluate()
 
     traci.load([sumoBinary, "-c", "data/cross.sumocfg",
                  "--tripinfo-output", "tripinfo.xml",

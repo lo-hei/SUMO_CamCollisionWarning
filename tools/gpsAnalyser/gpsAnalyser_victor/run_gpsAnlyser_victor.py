@@ -21,12 +21,12 @@ def run():
     # gps_plotter.plot_gps(file_names=["usb_1"], interval=interval)
     # gps_plotter.plot_gps_track_on_map(file_name="usb_1", interval=interval)
     # gps_plotter.plot_gps_track_interpolation(file_names=["usb_1", "usb_r"], dots=True, interval=interval)
-    # gps_plotter.plot_gps_error(file_name="usb_1", interval=interval)
+    gps_plotter.plot_gps_error(file_name="usb_r", interval=interval)
     ''' styles = [histogram, map, drift, heatmap] '''
     # gps_plotter.plot_gps_deviation(baseline="usb_r", comparison="usb_1", style="heatmap", interval=interval)
 
-    gps_model_tool.create_model(gps_file="usb_3", model_name="GpsModels-victor-1")
-    gps_model_tool.use_model(model_name="GpsModels-victor-1", seconds_to_simulate=15)
+    # gps_model_tool.create_model(gps_file="usb_3", model_name="GpsModels-victor-1")
+    # gps_model_tool.use_model(model_name="GpsModels-victor-1", seconds_to_simulate=15)
 
 
 def load_data(gps_cam_log_name, available_files):

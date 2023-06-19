@@ -7,17 +7,17 @@ import simulationClasses.Vehicles.vehicleClass as v
 
 class Risk(enum.Enum):
     NoRisk = 0
-    SendWarning = 1
-    Internvene = 2
-    Collision = 3
+    Warning = 1
+    Collision = 2
 
 
 class CollisionWarningAlgorithm:
 
     def __init__(self, bike: v.Vehicle):
         self.bike = bike
+        self.warning_status = Risk.NoRisk
         self.risk_assessment = {}           # {vehicle_id: Risk}
-        self.collision_warning_messages = []
+        self.risk_assessment_history = []   # [[time, risk_assessment], [] ... ]
 
     def get_current_risk(self) -> Risk:
         highest_risk = Risk.NoRisk

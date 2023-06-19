@@ -1,13 +1,14 @@
 from simulationClasses.utils import helper
 import simulationClasses.CollisionWarningAlgorithm.collisionWarningAlgorithm as cwa
-import simulationClasses.CollisionWarningAlgorithm.collisionWarningMessage as cwm
 
 
 class RadiusCWA(cwa.CollisionWarningAlgorithm):
 
-    def __init__(self, bike, radius):
+    def __init__(self, bike):
         super(RadiusCWA, self).__init__(bike=bike)
-        self.radius = radius
+
+        self.radius_warning = 6
+        self.radius_collision = 3
 
     def check(self):
         """
@@ -32,12 +33,15 @@ class RadiusCWA(cwa.CollisionWarningAlgorithm):
             distance = helper.distance(longitude_1=own_longitude, latitude_1=own_latitude,
                                        longitude_2=other_longitude, latitude_2=other_latitude)
 
-            if distance < self.radius:
+            if distance < self.radius_collision:
 
-                collision_warning_message = cwm.CollisionWarningMessage(vehicle_id_1=self.bike.vehicle_id,
-                                                                        vehicle_id_2=other_vehicle_id)
-                self.collision_warning_messages.append(collision_warning_message)
-                self.risk_assessment[other_vehicle_id] = cwa.Risk.SendWarning
+                self.risk_assessment[other_vehicle_id] = cwa.Risk.Collision
+                print("Sending COLLISION to", self.bike.vehicle_id)
+
+            elif distance < self.radius_warning:
+
+                self.risk_assessment[other_vehicle_id] = cwa.Risk.Warning
+                print("Sending WARNING to", self.bike.vehicle_id)
 
             else:
                 self.risk_assessment[other_vehicle_id] = cwa.Risk.NoRisk

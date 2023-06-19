@@ -29,7 +29,7 @@ class SimpleTransmissionModel(TransmissionModel):
                 bigger_prob = self.transmission_accuracy[bigger_bin]
                 prob = (smaller_prob + bigger_prob) / 2
 
-            if np.random.uniform(0, 1) > prob:
+            if np.random.uniform(0, 1, 1) > prob:
                 return False
             else:
                 return True

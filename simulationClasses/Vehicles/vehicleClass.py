@@ -34,7 +34,7 @@ class Vehicle:
         self.vehicle_length = traci.vehicle.getLength(self.vehicle_id)
         self.vehicle_width = traci.vehicle.getWidth(self.vehicle_id)
 
-        self.real_path.append([self.latitude, self.longitude])
+        self.real_path.append([self.latitude, self.longitude, self.simulation_manager.time])
 
     def add_cam_path_position(self, latitude, longitude):
-        self.cam_path.append([latitude, longitude])
+        self.cam_path.append([latitude, longitude, self.simulation_manager.time])

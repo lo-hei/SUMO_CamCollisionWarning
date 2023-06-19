@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2023-06-14 12:41:06 by Eclipse SUMO GUI Version 1.17.0
+<!-- generated on 2023-06-19 16:02:31 by Eclipse SUMO sumo Version 1.17.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
@@ -15,7 +15,7 @@
 
     <time>
         <begin value="0"/>
-        <step-length value="0.01"/>
+        <step-length value="0.1"/>
     </time>
 
     <processing>
@@ -29,11 +29,14 @@
     </report>
 
     <traci_server>
-        <remote-port value="59530"/>
+        <remote-port value="56497"/>
     </traci_server>
 
 </configuration>
 -->
 
 <collisions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/collision_file.xsd">
+    <collision time="168.40" type="junction" lane=":0_1_0" pos="8.15" collider="car_straight_3" victim="bike_straight_3" colliderType="type_car" victimType="type_bike" colliderSpeed="8.66" victimSpeed="2.49"/>
+    <collision time="528.30" type="junction" lane=":0_4_0" pos="9.02" collider="car_straight_12" victim="bike_right_12" colliderType="type_car" victimType="type_bike" colliderSpeed="5.15" victimSpeed="2.48"/>
+    <collision time="609.00" type="junction" lane=":0_5_0" pos="11.88" collider="car_straight_14" victim="bike_left_14" colliderType="type_car" victimType="type_bike" colliderSpeed="9.38" victimSpeed="2.49"/>
 </collisions>

@@ -30,7 +30,7 @@ class SimpleGpsModel(GpsModel):
         self.errors = []
         self.ordered_points = []
 
-        self.points_to_generate = 1000
+        self.points_to_generate = 2000
         self.current_point = 0
 
     def apply_inaccuracy(self, latitude, longitude):

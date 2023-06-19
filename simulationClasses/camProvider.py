@@ -48,29 +48,28 @@ class CamProvider:
     def get_current_cam(self, position_receiver) -> Tuple[Cam.CooperativeAwarenessMessage, None]:
         # returns the current CAM of the own vehicle
 
-        if position_receiver is None:
-            # Then cam_message is requested by yourself
-            delivery = True
-        else:
-            position_self = [self.vehicle.latitude, self.vehicle.longitude]
-            distance = math.dist(position_receiver, position_self)
-            print("Distance is ", distance)
+        current_time = self.vehicle.simulation_manager.time
+        time_cam_available = self.last_cam_generated_time + self.transmission_model.transmission_time
 
-            if self.transmission_model.apply_uncertainty_delivery(distance=distance):
+        if (current_time - time_cam_available) > self.update_rate:
+
+            if position_receiver is None:
+                # Then cam_message is requested by yourself
                 delivery = True
             else:
-                delivery = False
+                position_self = [self.vehicle.latitude, self.vehicle.longitude]
+                distance = math.dist(position_receiver, position_self)
 
-        if delivery:
+                if self.transmission_model.apply_uncertainty_delivery(distance=distance):
+                    delivery = True
+                else:
+                    delivery = False
 
-            current_time = self.vehicle.simulation_manager.time
-            time_cam_available = self.last_cam_generated_time + self.transmission_model.transmission_time
-
-            if (current_time - time_cam_available) > self.update_rate:
+            if delivery:
                 self.current_cam = self.generate_cam()
                 self.last_cam_generated_time = current_time
-            return self.current_cam
+                return self.current_cam
 
-        else:
-            return None
+            else:
+                return None
 

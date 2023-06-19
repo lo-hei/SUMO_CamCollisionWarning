@@ -13,13 +13,13 @@ def run():
     transmission_model_tool = TransmissionModelTool(transmission_test_folder=transmission_test_folder,
                                                     gps_cam_log_file=gps_cam_log_file)
 
-    # transmission_plotter.plot_transmissions_on_map()
-    # transmission_plotter.plot_transmission_success_on_distance()
-    # transmission_plotter.plot_transmission_time_on_distance()
-    # transmission_plotter.plot_transmission_accuracy_on_distance(bin_size=50)
+    transmission_plotter.plot_transmissions_on_map()
+    transmission_plotter.plot_transmission_success_on_distance()
+    transmission_plotter.plot_transmission_time_on_distance()
+    transmission_plotter.plot_transmission_accuracy_on_distance(bin_size=50)
 
-    transmission_model_tool.create_model(model_name="TransmissionModel-preTest",
-                                         bin_size=50, transmission_direction=2, vehicle_type="car")
+    # transmission_model_tool.create_model(model_name="TransmissionModel-preTest",
+    #                                      bin_size=50, transmission_direction=2, vehicle_type="car")
 
 
 if __name__ == '__main__':

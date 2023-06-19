@@ -11,7 +11,7 @@ class Bike(v.Vehicle):
     def __init__(self, vehicle_id, simulation_manager):
         super(Bike, self).__init__(vehicle_id=vehicle_id, simulation_manager=simulation_manager)
         self.type = "Bike"
-        self.cwa = radiusInterpolationCWA.RadiusInterpolateCWA(bike=self, radius=7)
+        self.cwa = None
 
         self.send_cams = []
         self.received_cams = {}  # {vehicle_id: [cam_0, cam_1 ...]}
@@ -47,12 +47,10 @@ class Bike(v.Vehicle):
 
                 if vehicle_id not in self.received_cams.keys():
                     self.received_cams[vehicle_id] = [current_vehicle_cam]
-                    print("Got first CAM from", vehicle_id)
 
                 # TODO: check if CAM is newer
                 elif not self.received_cams[vehicle_id][-1].cam_id == current_vehicle_cam.cam_id:
                     self.received_cams[vehicle_id].append(current_vehicle_cam)
-                    print("Got new CAM from", vehicle_id)
 
     def update_send_cam(self):
         # updates the own cams of the vehicle

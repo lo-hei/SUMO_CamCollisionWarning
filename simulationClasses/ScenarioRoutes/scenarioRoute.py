@@ -57,12 +57,9 @@ class ScenarioRoute:
     def tweak(self):
         # changes starting-parameter by a small amount
 
-        self.jmIgnoreFoeProb = get_random_prob_mean_1()
-        self.jmIgnoreJunctionFoeProb = get_random_prob_mean_1()
+        self.jmIgnoreFoeProb = get_random_prob_mean_1_or_1()
+        self.jmIgnoreJunctionFoeProb = get_random_prob_mean_1_or_1()
         self.impatience = random.choice([0, 1])
 
         self.start_bike = self.__start_bike + get_random_change_max_6()
-        # print("starting with start_bike = ", self.start_bike)
         self.start_car = self.__start_car + get_random_change_max_6()
-        # print("starting with start_car = ", self.start_car)
-        # print("-------------------------------------")

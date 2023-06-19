@@ -1,15 +1,17 @@
 import math
+from copy import deepcopy
 
 from simulationClasses.utils import helper
 import simulationClasses.CollisionWarningAlgorithm.collisionWarningAlgorithm as cwa
-import simulationClasses.CollisionWarningAlgorithm.collisionWarningMessage as cwm
 
 
 class RadiusInterpolateCWA(cwa.CollisionWarningAlgorithm):
 
-    def __init__(self, bike, radius):
+    def __init__(self, bike):
         super(RadiusInterpolateCWA, self).__init__(bike=bike)
-        self.radius = radius
+
+        self.radius_warning = 8     # in m
+        self.radius_collision = 3   # in m
 
     def interpolate_other_position(self, current_other_cam):
         last_longitude = current_other_cam.longitude
@@ -58,14 +60,23 @@ class RadiusInterpolateCWA(cwa.CollisionWarningAlgorithm):
             distance = helper.distance(longitude_1=own_longitude, latitude_1=own_latitude,
                                        longitude_2=other_longitude, latitude_2=other_latitude)
 
-            if distance < self.radius:
-
-                collision_warning_message = cwm.CollisionWarningMessage(vehicle_id_1=self.bike.vehicle_id,
-                                                                        vehicle_id_2=other_vehicle_id)
-                self.collision_warning_messages.append(collision_warning_message)
-                self.risk_assessment[other_vehicle_id] = cwa.Risk.SendWarning
-
-                print("Sending WARNING to", self.bike.vehicle_id)
+            if distance < self.radius_collision:
+                if other_vehicle_id in self.risk_assessment.keys():
+                    if not self.risk_assessment[other_vehicle_id] == cwa.Risk.Collision:
+                        print(self.bike.vehicle_id, " - Collision at ", self.bike.simulation_manager.time, "with", other_vehicle_id)
+                self.risk_assessment[other_vehicle_id] = cwa.Risk.Collision
+                if self.warning_status.value < cwa.Risk.Collision.value:
+                    self.warning_status = cwa.Risk.Collision
+            elif distance < self.radius_warning:
+                if other_vehicle_id in self.risk_assessment.keys():
+                    if not self.risk_assessment[other_vehicle_id] == cwa.Risk.Warning:
+                        print(self.bike.vehicle_id, " - Warning at ", self.bike.simulation_manager.time, "with", other_vehicle_id)
+                self.risk_assessment[other_vehicle_id] = cwa.Risk.Warning
+                if self.warning_status.value < cwa.Risk.Warning.value:
+                    self.warning_status = cwa.Risk.Warning
 
             else:
                 self.risk_assessment[other_vehicle_id] = cwa.Risk.NoRisk
+
+        self.risk_assessment_history.append([deepcopy(self.bike.simulation_manager.time),
+                                             deepcopy(self.risk_assessment)])
