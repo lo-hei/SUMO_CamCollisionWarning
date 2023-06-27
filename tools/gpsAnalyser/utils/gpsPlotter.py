@@ -45,7 +45,6 @@ class GpsPlotter(GpsAnalyser):
         plt.tight_layout()
         plt.show()
 
-
     def plot_gps_track_on_map(self, file_name, interval):
         gps_file = self.file_plotter[file_name]
         image = Image.open(gps_file.map_path, 'r')  # Load map image.
@@ -61,7 +60,7 @@ class GpsPlotter(GpsAnalyser):
         image.show()
         # image.save(output_path)
 
-    def plot_gps_track_interpolation(self, file_names, dots, interval=None):
+    def plot_gps_track_interpolation(self, file_names, dots, interpolation=True, interval=None):
         plt.figure(figsize=(10, 10))
         color_lines = ["blue", "orange", "green"]
         color_dots = ["darkblue", "darkorange", "darkgreen"]
@@ -80,10 +79,12 @@ class GpsPlotter(GpsAnalyser):
             lat, long = zip(*coord)
             lat_new, long_new = zip(*interpolated)
 
-            plt.plot(long_new, lat_new, color=color_lines[i])
+            if interpolation:
+                plt.plot(long_new, lat_new, color=color_lines[i])
+
             if dots:
-                pass
                 plt.scatter(long, lat, s=15, color=color_dots[i])
+
 
         plt.ylim(min(lat) - 0.0001, max(lat) + 0.0001)
         plt.xlim(min(long) - 0.0001, max(long) + 0.0001)
@@ -110,8 +111,9 @@ class GpsPlotter(GpsAnalyser):
 
         for i in range(len(err_major_orientation)):
             center = np.array([long[i], lat[i]])
-            major_ax = err_semi_major[i]
-            minor_ax = err_semi_minor[i]
+            # divide by 100 for conversion from Centimeter to Meter
+            major_ax = err_semi_major[i] / 100
+            minor_ax = err_semi_minor[i] / 100
             angle_deg = err_major_orientation[i]
 
             ellipse_patch = mpatches.Ellipse(center, major_ax, minor_ax, angle_deg,
@@ -128,7 +130,7 @@ class GpsPlotter(GpsAnalyser):
         ax1_twimx = ax[1].twinx()
         bins = np.arange(0, 40, 1)
 
-        _, bins, patches = ax[1].hist(np.clip(err_semi_major, bins[0], bins[-1]), bins=40, alpha=0.4, color="orange")
+        _, bins, patches = ax[1].hist(np.clip(err_semi_major, bins[0], bins[-1]), bins=bins, alpha=0.4, color="orange")
 
         patches[-1].set_facecolor('red')
 
@@ -136,6 +138,7 @@ class GpsPlotter(GpsAnalyser):
         xlabels[-1] += '+'
 
         N_labels = len(xlabels)
+        # ax[1].set_title(str("Time to first GPS-fix:" + file.time_to_gps))
         ax[1].set_xticks(2 * np.arange(N_labels))
         ax[1].set_xticklabels(xlabels)
         ax[1].set_xlim([0, 40])
@@ -146,7 +149,10 @@ class GpsPlotter(GpsAnalyser):
         density._compute_covariance()
         ax1_twimx.plot(xs, density(xs))
 
+        over_100 = len([e for e in err_semi_major if e > 100])
         ax[2].plot(err_semi_major)
+        ax[2].set_ylim([0, 100])
+        ax[2].axvspan(0, over_100, alpha=0.5, color='red')
 
         plt.tight_layout()
         plt.show()

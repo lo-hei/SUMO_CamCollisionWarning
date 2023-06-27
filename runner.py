@@ -28,7 +28,7 @@ import optparse
 import random
 
 from time import sleep
-from tqdm import tqdm
+# from tqdm import tqdm
 
 from simulationClasses.CollisionWarningAlgorithm.radiusCWA import RadiusCWA
 from simulationClasses.CollisionWarningAlgorithm.radiusInterpolationCWA import RadiusInterpolateCWA

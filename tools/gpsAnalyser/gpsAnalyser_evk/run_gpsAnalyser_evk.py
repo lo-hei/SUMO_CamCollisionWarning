@@ -7,8 +7,8 @@ from tools.gpsAnalyser.utils.gpsPlotter import GpsPlotter
 
 
 def run():
-    gps_cam_log_name = "Transmissiontest_1/EVK_2/GpsCamLog_1"
-    available_files = ["internal_GPS", "externalACM0_GPS", "externalACM1_GPS"]
+    gps_cam_log_name = "GPS_Test_23_06/GpsCamLog_7"
+    available_files = ["internal_GPS", "externalACM0_GPS", "externalACM1_GPS", "externalACM2_GPS"]
     file_plotter = load_data(gps_cam_log_name=gps_cam_log_name, available_files=available_files)
 
     gps_plotter = GpsPlotter(gps_cam_log_name=gps_cam_log_name, available_files=available_files,
@@ -18,9 +18,11 @@ def run():
 
     interval = None
 
-    # gps_plotter.plot_gps_track_on_map("internal_GPS", interval=interval)
-    # gps_plotter.plot_gps_track_interpolation(file_names=["internal_GPS", "externalACM0_GPS"], interval=interval, dots=True)
-    gps_plotter.plot_gps_error(file_name="internal_GPS", interval=interval)
+    # gps_plotter.plot_gps_track_on_map("externalACM2_GPS", interval=interval)
+    # gps_plotter.plot_gps_track_interpolation(file_names=["externalACM1_GPS", "externalACM0_GPS"], interval=interval, interpolation=False, dots=True)
+    gps_plotter.plot_gps_error(file_name="externalACM2_GPS", interval=interval)
+    gps_plotter.plot_gps_error(file_name="externalACM1_GPS", interval=interval)
+    gps_plotter.plot_gps_error(file_name="externalACM0_GPS", interval=interval)
     ''' styles = [histogram, map, drift, heatmap] '''
     # gps_plotter.plot_gps_deviation(baseline="externalACM0_GPS", comparison="externalACM0_GPS", style="map")
 

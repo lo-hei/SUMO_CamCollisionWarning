@@ -1,3 +1,4 @@
+import math
 import os
 from pathlib import Path
 
@@ -18,6 +19,8 @@ class GpsFile:
         self.output_path = self.root_path + "\\src\\maps"
 
         self.gps_data = self.load_data()
+        self.time_to_gps = None
+        self.time_to_good_gps = None
 
         self.map_path = self.root_path + "\\src\\maps\\" + "canyon_hq_map.png"
         self.map_points = [50.3674, 7.5679, 50.3626, 7.5827]
@@ -27,15 +30,26 @@ class GpsFile:
 
     def load_data(self):
         df = pd.read_csv(self.file_path, skipinitialspace=True)
+
+        # set time_to_gps to the time, where first value-change in coordinates is
+        last_lat = df.iloc[0]['latitude']
+        last_lon = df.iloc[0]['longitude']
+        first_time = df.iloc[0]['system_time']
+        for index, row in df.iterrows():
+            if not last_lat == row['latitude'] or last_lon == row['longitude']:
+                self.time_to_gps = row['system_time'] - first_time
+
+        df = df[df['gps_time'] > 0.0]
+        df = df[df['latitude'] > 0.0]
+        df = df[df['latitude'].notna()]
+        df = df[df['longitude'] > 0.0]
+        df = df[df['longitude'].notna()]
+
         return df
 
     def get_coordinates(self):
         coordinates = tuple(zip(self.gps_data['latitude'].values, self.gps_data['longitude'].values))
-        times = self.gps_data['time'].values
-
-        while coordinates[0] == (0.0, 0.0) or times[0] == 0:
-            coordinates = coordinates[1:]
-            times = times[1:]
+        times = self.gps_data['gps_time'].values
 
         return coordinates, times
 
@@ -45,12 +59,7 @@ class GpsFile:
                            self.gps_data['error_semi_minor'].values))
 
         coordinates = tuple(zip(self.gps_data['latitude'].values, self.gps_data['longitude'].values))
-        times = self.gps_data['time'].values
-
-        while coordinates[0] == (0.0, 0.0) or times[0] == 0:
-            coordinates = coordinates[1:]
-            times = times[1:]
-            errors = errors[1:]
+        times = self.gps_data['gps_time'].values
 
         return coordinates, times, errors
 
