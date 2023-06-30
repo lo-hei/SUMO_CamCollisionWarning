@@ -49,6 +49,10 @@ class RadiusInterpolateCWA(cwa.CollisionWarningAlgorithm):
         for other_vehicle_id, cams in self.bike.received_cams.items():
             if cams[-1]:
                 current_other_cam = cams[-1]
+
+                # check if CAM message is valid
+                if current_other_cam.gps_time is None:
+                    continue
             else:
                 continue
 

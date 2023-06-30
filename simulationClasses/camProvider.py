@@ -19,29 +19,38 @@ class CamProvider:
         elif self.vehicle.get_type() == "bike":
             vehicle_factor = 1
 
-        self.gps_model = SimpleGpsModel("GpsModels-victor-1", vehicle_factor=vehicle_factor)
+        self.gps_model = SimpleGpsModel("GpsModels-internal", vehicle_factor=vehicle_factor)
         self.gps_model.load_model()
         self.transmission_model = SimpleTransmissionModel("TransmissionModel-preTest")
         self.transmission_model.load_model(vehicle_type=self.vehicle.get_type())
 
         self.update_rate = 1        # in seconds
-        self.current_cam = self.generate_cam()
+        # self.current_cam = self.generate_cam()
         self.last_cam_generated_time = self.vehicle.simulation_manager.time
 
     def generate_cam(self) -> Cam.CooperativeAwarenessMessage:
         # generates a new CAM
         cooperative_awareness_message = Cam.CooperativeAwarenessMessage(vehicle=self.vehicle)
-        latitude = cooperative_awareness_message.latitude
-        longitude = cooperative_awareness_message.longitude
 
-        new_latitude, new_longitude, error = self.gps_model.apply_inaccuracy(latitude=latitude, longitude=longitude)
-        self.vehicle.add_cam_path_position(new_latitude, new_longitude)
+        gps_fix = self.gps_model.get_current_fix()
+        fix_latitude = gps_fix["latitude"]
+        fix_longitude = gps_fix["longitude"]
+        fix_time = gps_fix["time"]
+        fix_error = gps_fix["error"]
 
-        cooperative_awareness_message.latitude = new_latitude
-        cooperative_awareness_message.longitude = new_longitude
-        cooperative_awareness_message.semi_major_confidence = error
-        cooperative_awareness_message.semi_minor_confidence = error
-        cooperative_awareness_message.semi_major_orientation = 0
+        self.vehicle.add_cam_path_position(fix_latitude, fix_longitude)
+
+        cooperative_awareness_message.latitude = fix_latitude
+        cooperative_awareness_message.longitude = fix_longitude
+        cooperative_awareness_message.gps_time = fix_time
+        if fix_error is None:
+            cooperative_awareness_message.semi_major_confidence = None
+            cooperative_awareness_message.semi_minor_confidence = None
+            cooperative_awareness_message.semi_major_orientation = None
+        else:
+            cooperative_awareness_message.semi_major_confidence = fix_error[1]
+            cooperative_awareness_message.semi_minor_confidence = fix_error[2]
+            cooperative_awareness_message.semi_major_orientation = fix_error[0]
 
         return cooperative_awareness_message
 

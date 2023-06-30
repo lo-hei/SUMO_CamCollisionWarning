@@ -80,6 +80,7 @@ class GpsPlotter(GpsAnalyser):
             lat_new, long_new = zip(*interpolated)
 
             if interpolation:
+                print(long_new)
                 plt.plot(long_new, lat_new, color=color_lines[i])
 
             if dots:
@@ -104,6 +105,10 @@ class GpsPlotter(GpsAnalyser):
 
             errors = errors[:interval[1]]
             errors = errors[interval[0]:]
+
+        if not coord:
+            print(file_name, "-- No coordinates found")
+            return None
 
         lat, long = zip(*coord)
         lat, long = coord_mesh_to_meter_mesh(lat, long)
@@ -149,10 +154,13 @@ class GpsPlotter(GpsAnalyser):
         density._compute_covariance()
         ax1_twimx.plot(xs, density(xs))
 
-        over_100 = len([e for e in err_semi_major if e > 100])
+        over_20 = len([e for e in err_semi_major if e > 20])
         ax[2].plot(err_semi_major)
-        ax[2].set_ylim([0, 100])
-        ax[2].axvspan(0, over_100, alpha=0.5, color='red')
+        ax[2].set_ylim([0, 20])
+        ax[2].axvspan(0, over_20, alpha=0.5, color='red')
+        avg_err_semi_major = sum(err_semi_major) / len(err_semi_major)
+        ax[2].axhline(avg_err_semi_major, linestyle='--', label=str("avg error = " + str(round(avg_err_semi_major, 4))))
+        ax[2].legend()
 
         plt.tight_layout()
         plt.show()

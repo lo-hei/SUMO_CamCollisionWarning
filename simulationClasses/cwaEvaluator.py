@@ -19,10 +19,10 @@ class CwaEvaluator:
         self.runs = runs
 
         self.route_manager = RouteManager()
-        if evaluation_mode in [0, 1, 2]:
+        if evaluation_mode in [0, 1, 2, 3]:
             self.generate_routefile()
 
-        if evaluation_mode == 3:
+        if evaluation_mode == 4:
             self.generate_evaluation_routefile()
 
         # just inactive vehicles from simulationManager
@@ -44,8 +44,10 @@ class CwaEvaluator:
         elif self.evaluation_mode == 1:
             self.plot_vehicle_paths()
         elif self.evaluation_mode == 2:
-            self.plot_cwa_cam_distance()
+            self.plot_distance_between_vehicles()
         elif self.evaluation_mode == 3:
+            self.plot_distance_bike_view()
+        elif self.evaluation_mode == 4:
             self.evaluate_cwa()
         else:
             print("Wrong evaluation_mode selected")
@@ -185,13 +187,15 @@ class CwaEvaluator:
         self.real_pred_value.append([highest_warning_real, highest_warning_cwa])
 
         if time_warning_cwa and time_warning_real:
-            self.cwa_time_before_warning.append(time_warning_real - time_warning_cwa)
             if (time_warning_real - time_warning_cwa) > 20:
                 self.plot_cwa_cam_distance(bike=bike, car=car)
+            else:
+                self.cwa_time_before_warning.append(time_warning_real - time_warning_cwa)
         if time_collision_cwa and time_collision_real:
-            self.cwa_time_before_collision.append(time_collision_real - time_collision_cwa)
             if (time_collision_real - time_collision_cwa) > 20:
                 self.plot_cwa_cam_distance(bike=bike, car=car)
+            else:
+                self.cwa_time_before_collision.append(time_collision_real - time_collision_cwa)
 
     def get_collision_and_warning_times(self, bike_path, car_path):
         distances_real = []
@@ -225,7 +229,9 @@ class CwaEvaluator:
         return time_collision, time_warning
 
     def plot_vehicle_paths(self):
-        plt.figure(figsize=(10, 10))
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot(1, 1, 1)
+        AXIS_LIM = [475, 542]
 
         for vehicle_id in self.vehicles.keys():
             real_path = self.vehicles[vehicle_id].real_path
@@ -233,20 +239,41 @@ class CwaEvaluator:
 
             if self.vehicles[vehicle_id].get_type() == "bike":
                 color = "green"
+                vehicle_type = "bike"
             elif self.vehicles[vehicle_id].get_type() == "car":
                 color = "red"
+                vehicle_type = "car"
 
-            plt.plot(x_real_path, y_real_path, color=color, linestyle="-")
+            plt.plot(x_real_path, y_real_path, color=color, linestyle="-", label=str("Real Path " + vehicle_type))
 
             cam_path = self.vehicles[vehicle_id].cam_path
-            y_cam_path, x_cam_path = zip(*cam_path)
-            plt.plot(x_cam_path, y_cam_path, color=color)
-            plt.plot(x_cam_path, y_cam_path, color=color, linestyle="--")
+            y_cam_path, x_cam_path, time_cam_path = zip(*cam_path)
+            ax.plot(x_cam_path, y_cam_path, color=color, linestyle="--", label=str("Positions from CAM " + vehicle_type))
+            ax.scatter(x_cam_path, y_cam_path, color=color, s=160, alpha=0.2, label=str("CAMs " + vehicle_type))
 
+            gps_path = self.vehicles[vehicle_id].gps_path
+            y_gps_path, x_gps_path, time_gps_path = zip(*gps_path)
+            ax.scatter(x_gps_path, y_gps_path, color=str("dark" + color), s=50, label=str("GPS fixes" + vehicle_type))
+
+            ax.set_xlim(AXIS_LIM)
+            ax.set_ylim(AXIS_LIM)
+
+            major_ticks = np.arange(AXIS_LIM[0], AXIS_LIM[1], 10)
+            minor_ticks = np.arange(AXIS_LIM[0], AXIS_LIM[1], 2)
+
+            ax.set_xticks(major_ticks)
+            ax.set_xticks(minor_ticks, minor=True)
+            ax.set_yticks(major_ticks)
+            ax.set_yticks(minor_ticks, minor=True)
+
+            ax.grid(which='minor', alpha=0.2)
+            ax.grid(which='major', alpha=0.5)
+
+        plt.legend()
         plt.tight_layout()
         plt.show()
 
-    def plot_cwa_cam_distance(self, bike=None, car=None):
+    def plot_distance_between_vehicles(self, bike=None, car=None):
 
         fig, ax = plt.subplots(figsize=(12, 6))
 
@@ -277,9 +304,26 @@ class CwaEvaluator:
                 distances_real.append(math.dist([x_bike, y_bike], [x_car, y_car]))
                 distances_real_time.append(t_bike)
 
-        print(distances_real)
-        ax.plot(distances_real_time, distances_real, color="blue", linestyle="-",
+        ax.plot(distances_real_time, distances_real, color="black", linestyle="-", linewidth="4", alpha=0.4,
                 label="Distance calculated from real Positions")
+
+        # GPS path
+        y_bike_gps_path, x_bike_gps_path, time_gps_bike = zip(*bike.gps_path)
+        y_car_gps_path, x_car_gps_path, time_gps_car = zip(*car.gps_path)
+
+        distances_gps = []
+        distances_gps_time = []
+        for x_bike, y_bike, t_bike in zip(x_bike_gps_path, y_bike_gps_path, time_gps_bike):
+            if t_bike >= time_gps_car[0]:
+                last_time = [x for x in time_gps_car if x <= t_bike][-1]
+                last_i = time_gps_car.index(last_time)
+                x_car = x_car_gps_path[last_i]
+                y_car = y_car_gps_path[last_i]
+                distances_gps.append(math.dist([x_bike, y_bike], [x_car, y_car]))
+                distances_gps_time.append(t_bike)
+
+        ax.plot(distances_gps_time, distances_gps, color="blue", linestyle="-", linewidth="2",
+                label="Distance calculated from GPS Positions")
 
         # cam path
         received_car_cams = bike.received_cams[car.vehicle_id]
@@ -296,7 +340,6 @@ class CwaEvaluator:
                 distances_cam.append(math.dist([x_bike, y_bike], [x_c, y_c]))
                 distances_cam_time.append(t_bike)
 
-        print(distances_cam)
         ax.plot(distances_cam_time, distances_cam, color="orange", linestyle="-",
                 label="Distance calculated from CAMs")
 
@@ -314,8 +357,6 @@ class CwaEvaluator:
         current_ws = warning_status_bike[0][1]
         start_ws_time = warning_status_bike[0][0]
 
-        print(warning_status_bike)
-
         for ws in warning_status_bike:
             if ws[1] == current_ws:
                 continue
@@ -330,12 +371,26 @@ class CwaEvaluator:
                 current_ws = ws[1]
                 start_ws_time = ws[0]
 
-        '''
-        ax.set_ylim([0, max(max(distances_cam), max(distances_real))])
-        # ax.set_xlim([min(min(distances_real_time), min(distances_cam_time)), max(max(time_bike), max(time_car))])
-        ax.set_xlim([min(min(distances_real_time), min(distances_cam_time)), 60])
-        '''
+        XLIM = [round(min(min(distances_real_time), min(distances_cam_time))/10)*10, 75]
+        YLIM = [0, 150]
+        ax.set_xlim(XLIM)
+        ax.set_ylim(YLIM)
 
-        plt.legend()
+        major_x_ticks = np.arange(XLIM[0], XLIM[1], 5)
+        minor_ticks = np.arange(XLIM[0], XLIM[1], 1)
+        minor_y_ticks = np.arange(XLIM[0], XLIM[1], 5)
+
+        ax.set_xticks(major_x_ticks)
+        ax.set_xticks(minor_ticks, minor=True)
+        # ax.set_yticks(major_y_ticks)
+        ax.set_yticks(minor_y_ticks, minor=True)
+
+        ax.grid(which='minor', alpha=0.1)
+        ax.grid(which='major', alpha=0.3)
+
+        plt.legend(loc="lower right")
         plt.tight_layout()
         plt.show()
+
+    def plot_distance_bike_view(self, bike=None):
+        pass

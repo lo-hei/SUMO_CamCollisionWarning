@@ -4,6 +4,7 @@ from copy import deepcopy
 
 import geopy
 import numpy as np
+from scipy.stats import multivariate_normal
 
 from simulationClasses.GpsModel.gpsModel import GpsModel
 
@@ -26,105 +27,152 @@ class SimpleGpsModel(GpsModel):
 
         self.vehicle_factor = vehicle_factor
 
-        self.d_points = []
         self.errors = []
-        self.ordered_points = []
+        self.d_points = []
 
-        self.points_to_generate = 2000
-        self.current_point = 0
+        self.next_update_time = None
 
-    def apply_inaccuracy(self, latitude, longitude):
-        # change coordinates here
+        self.fix_latitude = None
+        self.fix_longitude = None
+        self.fix_error = None
+        self.fix_time = None
+
+    def update_current_fix(self, real_latitude, real_longitude, real_time):
+        # check for updating the gps_fix
+
+        # at the start or if empty
+        if not self.errors:
+            self.errors = self.simulate_error(n=100)
 
         if not self.d_points:
-            self.generate_points()
-            self.simulate_errors()
-            self.order_points()
+            for i in range(5):
+                d_point = self.generate_deviation_point(self.errors[0])
+                self.errors.pop(0)
+                self.d_points.append(d_point)
 
-        if self.current_point == (self.points_to_generate - 1):
-            print("No order_points left. apply_inaccuracy can not be used anymore. Correct position returned.")
-            return latitude, longitude
+        if not self.next_update_time:
+            self.next_update_time = real_time + random.choices(list(self.gps_frequency.keys()),
+                                                               weights=self.gps_frequency.values(), k=1)[0]
 
-        shift_lat_m = self.ordered_points[self.current_point][0]
-        shift_lon_m = self.ordered_points[self.current_point][1]
-        error = self.errors[self.current_point]
-        self.current_point += 1
+        if real_time > self.next_update_time:
 
-        new_lat = latitude + (shift_lat_m * self.vehicle_factor)
-        new_lon = longitude + (shift_lon_m * self.vehicle_factor)
+            self.next_update_time += random.choices(list(self.gps_frequency.keys()),
+                                                    weights=self.gps_frequency.values(), k=1)[0]
 
-        return new_lat, new_lon, error
+            smoothed_d_point = self.get_smoothed_d_point()
+            self.d_points.pop(0)
+            d_point = self.generate_deviation_point(self.errors[0])
+            self.d_points.append(d_point)
 
-    def simulate_errors(self):
+            self.fix_latitude = real_latitude + smoothed_d_point[0]
+            self.fix_longitude = real_longitude + smoothed_d_point[1]
+            self.fix_time = real_time
+            self.fix_error = self.errors[0]
+            self.errors.pop(0)
+
+            return True
+        else:
+            return False
+
+    def get_current_fix(self):
+        return {"latitude": self.fix_latitude,
+                "longitude": self.fix_longitude,
+                "time": self.fix_time,
+                "error": self.fix_error}
+
+    def simulate_error(self, n):
         LONGTIME = 20
 
-        sim_changes = []
-        sim_error = [self.mean_error]
+        for major_minor in ["major", "minor"]:
 
-        for _ in range(self.points_to_generate):
+            if major_minor == "major":
+                mean_error = self.mean_error_major
+                min_error = self.min_error_major
+                max_error = self.max_error_major
+            elif major_minor == "minor":
+                mean_error = self.mean_error_minor
+                min_error = self.min_error_minor
+                max_error = self.max_error_minor
 
-            values_changes = list(self.changes_probs.keys())
-            weights_changes = list(self.changes_probs.values())
+            sim_changes = []
+            sim_error = [mean_error]
 
-            if len(sim_changes) >= LONGTIME:
-                current_longtime_change = sim_changes[-LONGTIME] - sim_changes[-1]
+            for _ in range(n):
 
+                values_changes = list(self.changes_probs.keys())
+                weights_changes = list(self.changes_probs.values())
+
+                if len(sim_changes) >= LONGTIME:
+                    current_longtime_change = sim_changes[-LONGTIME] - sim_changes[-1]
+
+                    for i, v in enumerate(values_changes):
+                        weight = weights_changes[i]
+
+                        add_weights = []
+                        for key, value in self.longtime_changes_probs.items():
+                            diff = abs(current_longtime_change - key)
+                            add_weights.append(diff * value)
+                        add_weights = [w / len(add_weights) for w in add_weights]
+
+                        rand_influence = \
+                        random.choices(list(self.longtime_changes_probs.keys()), weights=add_weights, k=1)[0]
+                        longtime_influence = 0.5 * abs(rand_influence - v)
+                        if rand_influence > weight:
+                            weights_changes[i] = weight + longtime_influence
+                        if rand_influence < weight:
+                            weights_changes[i] = weight - longtime_influence
+
+                    if min(weights_changes) < 0:
+                        weights_changes = [w + abs(min(weights_changes)) for w in weights_changes]
+
+                # make sure that the change will not bring the current value out of min-max-range
+                last_value = sim_error[-1]
                 for i, v in enumerate(values_changes):
-                    weight = weights_changes[i]
+                    if (last_value + v) < min_error or (last_value + v) > max_error:
+                        weights_changes[i] = 0
 
-                    add_weights = []
-                    for key, value in self.longtime_changes_probs.items():
-                        diff = abs(current_longtime_change - key)
-                        add_weights.append(diff * value)
-                    add_weights = [w / len(add_weights) for w in add_weights]
+                if np.random.uniform(0, 1) < self.prob_change:
+                    if all(v == 0 for v in weights_changes):
+                        change = random.choices(values_changes, weights=list(self.changes_probs.values()), k=1)[0]
+                    else:
+                        change = random.choices(values_changes, weights=weights_changes, k=1)[0]
+                else:
+                    change = 0
 
-                    rand_influence = random.choices(list(self.longtime_changes_probs.keys()), weights=add_weights, k=1)[0]
-                    longtime_influence = 0.5 * abs(rand_influence - v)
-                    if rand_influence > weight:
-                        weights_changes[i] = weight + longtime_influence
-                    if rand_influence < weight:
-                        weights_changes[i] = weight - longtime_influence
+                sim_changes.append(change)
+                sim_error.append(sim_error[-1] + change)
 
-                if min(weights_changes) < 0:
-                    weights_changes = [w + abs(min(weights_changes)) for w in weights_changes]
+            if major_minor == "major":
+                sim_major_error = sim_error
+            elif major_minor == "minor":
+                sim_minor_error = sim_error
 
-            # make sure that the change will not bring the current value out of min-max-range
-            last_value = sim_error[-1]
-            for i, v in enumerate(values_changes):
-                if (last_value + v) < self.min_error or (last_value + v) > self.max_error:
-                    weights_changes[i] = 0
+        sim_orientation_error = []
 
-            if np.random.uniform(0, 1) < self.prob_change:
-                change = random.choices(values_changes, weights=weights_changes, k=1)[0]
-            else:
-                change = 0
+        VARIANZ_IN_ORIENTATION = 10
+        for _ in range(n):
+            sim_orientation_error.append(np.random.normal(self.error_orientation, VARIANZ_IN_ORIENTATION))
 
-            sim_changes.append(change)
-            sim_error.append(sim_error[-1] + change)
+        sim_error = list(zip(sim_orientation_error, sim_major_error, sim_minor_error))
+        return sim_error
 
-        self.errors = sim_error
-
-    def generate_points(self):
-
-        heatmap = self.heatmap
+    def generate_deviation_point(self, error):
+        heatmap_model = self.heatmap
+        heatmap_model = (heatmap_model - np.min(heatmap_model)) / (np.max(heatmap_model) - np.min(heatmap_model))
         heatmap_size = self.heatmap_size
 
-        col_sums = np.sum(heatmap, axis=0)
-        col_nums = len(col_sums)
-        row_sums = np.sum(heatmap, axis=1)
-        row_nums = len(row_sums)
+        xlim = (heatmap_size[0], heatmap_size[1])
+        ylim = (heatmap_size[2], heatmap_size[3])
+        xres = len(np.sum(heatmap_model, axis=0))
+        yres = len(np.sum(heatmap_model, axis=1))
 
-        x_start = heatmap_size[0]
-        x_end = heatmap_size[1]
-        x_bin_width = (x_end - x_start) / col_nums
+        x_bin_width = (xlim[1] - xlim[0]) / xres
         # 0.4 instead if 0.5 to avoid rounding-errors
-        x_coordinates = np.arange(start=x_start + 0.4 * x_bin_width, stop=x_end - 0.4 * x_bin_width, step=x_bin_width)
+        x_coordinates = np.arange(start=xlim[0] + 0.4 * x_bin_width, stop=xlim[1] - 0.4 * x_bin_width, step=x_bin_width)
 
-        y_start = heatmap_size[2]
-        y_end = heatmap_size[3]
-        y_bin_width = (y_end - y_start) / row_nums
+        y_bin_width = (ylim[1] - ylim[0]) / yres
         # 0.4 instead if 0.5 to avoid rounding-errors
-        y_coordinates = np.arange(start=y_start + 0.4 * y_bin_width, stop=y_end - 0.4 * y_bin_width, step=y_bin_width)
+        y_coordinates = np.arange(start=ylim[0] + 0.4 * y_bin_width, stop=ylim[1] - 0.4 * y_bin_width, step=y_bin_width)
 
         # starting up left and going row by row
         coordinates_list = []
@@ -132,94 +180,41 @@ class SimpleGpsModel(GpsModel):
             for x in x_coordinates:
                 coordinates_list.append((x, y))
 
-        d_points = random.choices(coordinates_list, weights=heatmap.flatten(), k=self.points_to_generate)
+        x = np.linspace(xlim[0], xlim[1], xres)
+        y = np.linspace(ylim[0], ylim[1], yres)
+        xx, yy = np.meshgrid(x, y)
 
-        self.d_points = d_points
+        center = (0, 0)
+        major = error[1]
+        minor = error[2]
+        angle = error[0]
 
-    def order_points(self):
-        MAXIMAL_DISTANCE = 2
-        d_points = deepcopy(self.d_points)
+        phi = (angle / 180) * math.pi - 90
+        var_x = major ** 2 * math.cos(phi) ** 2 + minor ** 2 * math.sin(phi) ** 2
+        var_y = major ** 2 * math.sin(phi) ** 2 + minor ** 2 * math.cos(phi) ** 2
+        cov_xy = (major ** 2 - minor ** 2) * math.sin(phi) * math.cos(phi)
 
-        ordered_points = []
-        first_point = random.choice(d_points)
-        ordered_points.append(first_point)
-        d_points.remove(first_point)
+        s1 = [[var_x, cov_xy], [cov_xy, var_y]]
+        k1 = multivariate_normal(mean=center, cov=s1)
 
-        while len(d_points) > 0:
+        # evaluate kernels at grid points
+        xxyy = np.c_[xx.ravel(), yy.ravel()]
+        zz_1 = k1.pdf(xxyy)
 
-            # nearest neighbor jump dependend on error-change
+        # reshape
+        heatmap_error = zz_1.reshape((xres, yres))
+        heatmap_error = (heatmap_error - np.min(heatmap_error)) / (np.max(heatmap_error) - np.min(heatmap_error))
 
-            if len(self.errors) >= 2:
-                error_change = self.errors[len(ordered_points)] - self.errors[len(ordered_points) - 1]
-            else:
-                error_change = 0
+        # combine both heatmaps
+        heatmap_combine = np.add(heatmap_error, heatmap_model)
 
-            # if error gets greater, move away from center
-            # if error gets smaller, move towards the center
+        # select random from combined heatmap
+        d_point = random.choices(coordinates_list, weights=heatmap_combine.flatten(), k=1)[0]
 
-            last_point = ordered_points[-1]
-            last_d_center = math.dist(last_point, [0, 0])
-            distances = []
-            distances_to_center = []
+        return d_point
 
-            for p in d_points:
-                d_center = math.dist(p, [0, 0])
-                distances_to_center.append(d_center)
+    def get_smoothed_d_point(self):
+        avg_x = (self.d_points[0][0] + self.d_points[1][0] + self.d_points[2][0] + self.d_points[3][0] + self.d_points[4][0]) / 5
+        avg_y = (self.d_points[0][1] + self.d_points[1][1] + self.d_points[2][1] + self.d_points[3][1] + self.d_points[4][1]) / 5
 
-                d = math.dist(last_point, p)
-
-                if error_change > 0:
-                    if d_center > last_d_center:
-                        distances.append(d)
-                    else:
-                        distances.append(d + 1000)
-
-                elif error_change < 0:
-                    if d_center < last_d_center:
-                        distances.append(d)
-                    else:
-                        distances.append(d + 1000)
-                else:
-                    distances.append(d)
-
-            min_dist = min(distances)
-            current_point_i = distances.index(min_dist)
-            current_point = d_points[current_point_i]
-
-            if min_dist < MAXIMAL_DISTANCE:
-                ordered_points.append(current_point)
-                d_points.remove(current_point)
-            else:
-                # find nearest neighbor in already ordered points
-                distances_to_ordered = []
-                for o in ordered_points:
-                    d_o = math.dist(current_point, o)
-                    distances_to_ordered.append(d_o)
-                min_dist_ordered = min(distances_to_ordered)
-                min_dist_i_ordered = distances_to_ordered.index(min_dist_ordered)
-
-                # add point before or after this point
-                if min_dist_i_ordered > 0:
-                    distance_before = math.dist(current_point, ordered_points[min_dist_i_ordered - 1])
-                else:
-                    ordered_points.insert(0, current_point)
-                    d_points.remove(current_point)
-                    continue
-
-                if min_dist_i_ordered < (len(ordered_points) - 2):
-                    distance_after = math.dist(current_point, ordered_points[min_dist_i_ordered + 1])
-                else:
-                    ordered_points.append(current_point)
-                    d_points.remove(current_point)
-                    continue
-
-                if distance_before < distance_after:
-                    # add current_point_i before ordered_points[min_dist_i_ordered]
-                    ordered_points.insert(min_dist_i_ordered - 1, current_point)
-                    d_points.remove(current_point)
-                else:
-                    # add current_point_i after ordered_points[min_dist_i_ordered]
-                    ordered_points.insert(min_dist_i_ordered + 1, current_point)
-                    d_points.remove(current_point)
-
-        self.ordered_points = ordered_points
+        return (avg_x, avg_y)

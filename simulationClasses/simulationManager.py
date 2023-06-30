@@ -1,5 +1,6 @@
 import math
 import random
+import time
 
 import numpy as np
 import traci  # noqa
@@ -102,6 +103,7 @@ class SimulationManager:
 
     def update_active_vehicles(self):
         for vehicle_id in self.activeVehicles.keys():
+
             self.activeVehicles[vehicle_id].update()
 
             if "bike" in vehicle_id:
@@ -118,6 +120,7 @@ class SimulationManager:
         # update
         self.looking_for_new_vehicles()
         self.deleting_inactive_vehicles()
+
         self.update_active_vehicles()
 
         if self.speed_controller:

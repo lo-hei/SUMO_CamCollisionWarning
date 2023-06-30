@@ -26,9 +26,10 @@ import os
 import sys
 import optparse
 import random
+import time
 
 from time import sleep
-# from tqdm import tqdm
+from tqdm import tqdm
 
 from simulationClasses.CollisionWarningAlgorithm.radiusCWA import RadiusCWA
 from simulationClasses.CollisionWarningAlgorithm.radiusInterpolationCWA import RadiusInterpolateCWA
@@ -57,11 +58,12 @@ def run():
     evaluation_mode 
     0: NO EVALUATION
     1: PLOT_VEHICLE_PATHS
-    2: PLOT_DISTANCE_CAM_CWA
-    3: EVALUATE_CWA
+    2: PLOT_DISTANCE_BETWEEN_VEHICLES
+    3: PLOT_DISTANCE_BIKE_VIEW
+    4: EVALUATE_CWA
     '''
-    runs = 20
-    evaluation_mode = 3
+    runs = 1
+    evaluation_mode = 1
     evaluator = CwaEvaluator(runs=runs, cwa=RadiusInterpolateCWA, evaluation_mode=evaluation_mode)
 
     simulationManager = SimulationManager(step_length=step_length,

@@ -16,15 +16,14 @@ class CamFile:
         self.cam_data = self.load_data()
 
     def load_data(self):
-        print("read camFile", self.file_path)
-
         df = pd.read_csv(self.file_path, sep=",", skipinitialspace=True)
 
-        df = df.drop(df[df.receiveSendTime < 600000000000000].index)
+        df = df[df['receiveSendTime'] > 6000000000000]
         df["receiveSendTime"] = df["receiveSendTime"] / 1000000
         df["latitude"] = df["latitude"] * 0.0000001
         df["longitude"] = df["longitude"] * 0.0000001
 
+        print("read camFile", self.file_path, "(Length:", len(df.index), ")")
         return df
 
     def get_positions(self):
@@ -65,8 +64,20 @@ class CamFile:
 
         return False
 
-    def cut_by_time(self, starting_time):
+    def get_end_time(self):
+        times = self.get_times()
+        times.reverse()
+        for t in times:
+            if t > 600000000:
+                return t
+
+        return False
+
+    def cut_start_by_time(self, starting_time):
         self.cam_data = self.cam_data.drop(self.cam_data[self.cam_data.receiveSendTime < starting_time].index)
+
+    def cut_end_by_time(self, end_time):
+        self.cam_data = self.cam_data.drop(self.cam_data[self.cam_data.receiveSendTime > end_time].index)
 
     def get_extended_ids(self):
         ids = []
@@ -77,3 +88,10 @@ class CamFile:
             ids.append(str(str(id) + "_" + str(genDeltaTime)))
 
         return ids
+
+    def print_data(self):
+        print(" ------------------------ ")
+        with pd.option_context('display.max_rows', None, 'display.max_columns',
+                               None):  # more options can be specified also
+            print(self.cam_data)
+        print(" ------------------------ ")

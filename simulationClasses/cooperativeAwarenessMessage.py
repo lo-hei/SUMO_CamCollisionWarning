@@ -7,6 +7,7 @@ class CooperativeAwarenessMessage:
     def __init__(self, vehicle):
         self.creation_time = vehicle.simulation_manager.time
         self.generation_delta_time = 0
+        self.gps_time = None
         self.vehicle_type = vehicle.get_type()
 
         self.cam_id = vehicle.vehicle_id + "_" + str(self.creation_time)

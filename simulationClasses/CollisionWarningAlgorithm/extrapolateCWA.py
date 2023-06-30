@@ -3,15 +3,14 @@ import math
 import numpy as np
 from scipy.interpolate import UnivariateSpline
 
-from simulationClasses.utils import helper
 import simulationClasses.CollisionWarningAlgorithm.collisionWarningAlgorithm as cwa
-import simulationClasses.CollisionWarningAlgorithm.collisionWarningMessage as cwm
+from simulationClasses.utils import helper
 
 
 class ExtrapolationCWA(cwa.CollisionWarningAlgorithm):
 
     def __init__(self, bike):
-        super(RadiusInterpolateCWA, self).__init__(bike=bike)
+        super(ExtrapolationCWA, self).__init__(bike=bike)
 
         self.drive_directions = {}  # {vehicle_id: [Points of driveway]]}
         self.extrapolate_frequency = 5  # in Hz

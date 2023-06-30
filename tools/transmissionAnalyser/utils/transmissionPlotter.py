@@ -10,8 +10,8 @@ from tools.transmissionAnalyser.utils.transmissionAnalyser import TransmissionAn
 
 class TransmissionPlotter(TransmissionAnalyser):
 
-    def __init__(self, transmission_test_folder, gps_cam_log_file, start_if_gps_signal):
-        super(TransmissionPlotter, self).__init__(transmission_test_folder, gps_cam_log_file, start_if_gps_signal)
+    def __init__(self, transmission_test_folder, gps_cam_log_file, start_if_gps_signal, end_in_sync):
+        super(TransmissionPlotter, self).__init__(transmission_test_folder, gps_cam_log_file, start_if_gps_signal, end_in_sync)
 
     def plot_transmissions_on_map(self):
         outgoing_file = [self.evk_1_camFile_outgoing, self.evk_2_camFile_outgoing]
@@ -73,7 +73,7 @@ class TransmissionPlotter(TransmissionAnalyser):
                     receive_time = incoming_times[incoming_ids.index(message_id)]
 
                     # find index for position of receiver with same time
-                    i = min(range(len(pos_receiver["time"])), key=lambda j: abs(pos_receiver["time"][j] - time))
+                    i = min(range(len(pos_receiver["gps_time"])), key=lambda j: abs(pos_receiver["gps_time"][j] - time))
 
                     distance = distance_earth(lat, lon, pos_receiver["latitude"][i], pos_receiver["longitude"][i])
                     transmission_time = receive_time - time
@@ -120,7 +120,7 @@ class TransmissionPlotter(TransmissionAnalyser):
                     received = False
 
                 # find index for position of receiver with same time
-                i = min(range(len(pos_receiver["time"])), key=lambda j: abs(pos_receiver["time"][j] - time))
+                i = min(range(len(pos_receiver["gps_time"])), key=lambda j: abs(pos_receiver["gps_time"][j] - time))
 
                 distance = distance_earth(lat, lon, pos_receiver["latitude"][i], pos_receiver["longitude"][i])
 
@@ -165,7 +165,7 @@ class TransmissionPlotter(TransmissionAnalyser):
                     received = False
 
                 # find index for position of receiver with same time
-                i = min(range(len(pos_receiver["time"])), key=lambda j: abs(pos_receiver["time"][j] - time))
+                i = min(range(len(pos_receiver["gps_time"])), key=lambda j: abs(pos_receiver["gps_time"][j] - time))
 
                 distance = distance_earth(lat, lon, pos_receiver["latitude"][i], pos_receiver["longitude"][i])
                 transmission_log.append([distance, received])

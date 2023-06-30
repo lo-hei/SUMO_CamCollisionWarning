@@ -15,11 +15,18 @@ class GpsModel:
 
         self.heatmap = None
         self.heatmap_size = None
-        self.gps_frequency = None  # Hz
+        self.gps_frequency = {}
 
-        self.mean_error = None
-        self.min_error = None
-        self.max_error = None
+        self.mean_error_major = None
+        self.min_error_major = None
+        self.max_error_major = None
+
+        self.mean_error_minor = None
+        self.min_error_minor = None
+        self.max_error_minor = None
+
+        self.error_orientation = None
+
         self.prob_change = None
         self.changes_probs = None
         self.longtime_changes_probs = None
@@ -33,11 +40,21 @@ class GpsModel:
             with open(parameter_path, "r+") as j:
                 parameters = json.load(j)
             self.heatmap_size = parameters['heatmap_size']
-            self.gps_frequency = parameters['gps_frequency']
 
-            self.mean_error = float(parameters['mean_error'])
-            self.min_error = float(parameters['min_error'])
-            self.max_error = float(parameters['max_error'])
+            gps_frequency = parameters['gps_frequency']
+            self.changes_probs = {}
+            for k, v in gps_frequency.items():
+                self.gps_frequency[float(k)] = float(v)
+
+            self.mean_error_major = float(parameters['mean_error_major'])
+            self.min_error_major = float(parameters['min_error_major'])
+            self.max_error_major = float(parameters['max_error_major'])
+
+            self.mean_error_minor = float(parameters['mean_error_minor'])
+            self.min_error_minor = float(parameters['min_error_minor'])
+            self.max_error_minor = float(parameters['max_error_minor'])
+
+            self.error_orientation = float(parameters['error_orientation'])
             self.prob_change = float(parameters['prob_change'])
 
             changes_probs = parameters['changes_probs']
@@ -71,9 +88,16 @@ class GpsModel:
                     parameters['heatmap_size'] = self.heatmap_size
                     parameters['gps_frequency'] = self.gps_frequency
 
-                    parameters['mean_error'] = self.mean_error
-                    parameters['min_error'] = self.min_error
-                    parameters['max_error'] = self.max_error
+                    parameters['mean_error_major'] = self.mean_error_major
+                    parameters['min_error_major'] = self.min_error_major
+                    parameters['max_error_major'] = self.max_error_major
+
+                    parameters['mean_error_minor'] = self.mean_error_minor
+                    parameters['min_error_minor'] = self.min_error_minor
+                    parameters['max_error_minor'] = self.max_error_minor
+
+                    parameters['error_orientation'] = self.error_orientation
+
                     parameters['prob_change'] = self.prob_change
                     parameters['changes_probs'] = self.changes_probs
                     parameters['longtime_changes_probs'] = self.longtime_changes_probs

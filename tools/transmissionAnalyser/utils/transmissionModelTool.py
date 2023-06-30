@@ -11,7 +11,7 @@ class TransmissionModelTool(TransmissionAnalyser):
 
     def __init__(self, transmission_test_folder, gps_cam_log_file):
         super(TransmissionModelTool, self).__init__(transmission_test_folder, gps_cam_log_file,
-                                                    start_if_gps_signal=True)
+                                                    start_if_gps_signal=True, end_in_sync=True)
         self.model = None
 
     def create_model(self, model_name, bin_size=50, transmission_direction=1, vehicle_type="bike"):

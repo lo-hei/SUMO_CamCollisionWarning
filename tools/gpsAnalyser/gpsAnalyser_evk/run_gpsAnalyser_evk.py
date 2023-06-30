@@ -14,20 +14,21 @@ def run():
     gps_plotter = GpsPlotter(gps_cam_log_name=gps_cam_log_name, available_files=available_files,
                              file_plotter=file_plotter)
     gps_model_tool = GpsModelTool(gps_cam_log_name=gps_cam_log_name, available_files=available_files,
-                                  file_plotter=file_plotter, baseline_file="internal_GPS")
+                                  file_plotter=file_plotter, baseline_file="externalACM1_GPS")
 
     interval = None
 
-    # gps_plotter.plot_gps_track_on_map("externalACM2_GPS", interval=interval)
-    # gps_plotter.plot_gps_track_interpolation(file_names=["externalACM1_GPS", "externalACM0_GPS"], interval=interval, interpolation=False, dots=True)
-    gps_plotter.plot_gps_error(file_name="externalACM2_GPS", interval=interval)
-    gps_plotter.plot_gps_error(file_name="externalACM1_GPS", interval=interval)
-    gps_plotter.plot_gps_error(file_name="externalACM0_GPS", interval=interval)
+    # gps_plotter.plot_gps_track_on_map("externalACM0_GPS", interval=interval)
+    # gps_plotter.plot_gps_track_interpolation(file_names=["externalACM1_GPS", "externalACM2_GPS"], interval=interval, interpolation=True, dots=True)
+    # gps_plotter.plot_gps_error(file_name="externalACM0_GPS", interval=interval)
+    # gps_plotter.plot_gps_error(file_name="externalACM1_GPS", interval=interval)
+    # gps_plotter.plot_gps_error(file_name="externalACM2_GPS", interval=interval)
+    gps_plotter.plot_gps_error(file_name="internal_GPS", interval=interval)
     ''' styles = [histogram, map, drift, heatmap] '''
     # gps_plotter.plot_gps_deviation(baseline="externalACM0_GPS", comparison="externalACM0_GPS", style="map")
 
-    # gps_model_tool.create_model(gps_file="internal_GPS", model_name="GpsModels-internal")
-    # gps_model_tool.use_model(model_name="stored_GpsModels-internal", seconds_to_simulate=15)
+    # gps_model_tool.create_model(gps_file="externalACM2_GPS", model_name="GpsModels-internal")
+    # gps_model_tool.use_model(model_name="stored_GpsModels-internal", seconds_to_simulate=50)
 
 
 def load_data(gps_cam_log_name, available_files):

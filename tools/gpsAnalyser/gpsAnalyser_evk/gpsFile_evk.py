@@ -22,8 +22,8 @@ class GpsFile:
         self.time_to_gps = None
         self.time_to_good_gps = None
 
-        self.map_path = self.root_path + "\\src\\maps\\" + "canyon_hq_map.png"
-        self.map_points = [50.3674, 7.5679, 50.3626, 7.5827]
+        self.map_path = self.root_path + "\\src\\maps\\" + "koblenz.png"
+        self.map_points = [50.3699, 7.5512, 50.3277, 7.5964]
 
         image = Image.open(self.map_path, 'r')
         self.map_size = [image.size[0], image.size[1]]
@@ -32,18 +32,44 @@ class GpsFile:
         df = pd.read_csv(self.file_path, skipinitialspace=True)
 
         # set time_to_gps to the time, where first value-change in coordinates is
+        self.time_to_gps = 0
+        self.time_to_good_gps = 0
+        gps_found = False
+        good_gps_found = False
         last_lat = df.iloc[0]['latitude']
         last_lon = df.iloc[0]['longitude']
         first_time = df.iloc[0]['system_time']
         for index, row in df.iterrows():
-            if not last_lat == row['latitude'] or last_lon == row['longitude']:
-                self.time_to_gps = row['system_time'] - first_time
+            if row['system_time'] > 600000000000 and first_time == df.iloc[0]['system_time']:
+                self.time_to_gps = df.iloc[index-1]['system_time'] - first_time
+                self.time_to_good_gps = df.iloc[index - 1]['system_time'] - first_time
+                first_time = row['system_time']
+            if (not last_lat == row['latitude'] or not last_lon == row['longitude']) and not gps_found:
+                self.time_to_gps += row['system_time'] - first_time
+                gps_found = True
+            if gps_found and not good_gps_found:
+                if row['err_semi_major'] < 20:
+                    print(self.time_to_good_gps, row['system_time'], first_time)
+                    self.time_to_good_gps += row['system_time'] - first_time
+                    good_gps_found = True
+                    break
+
+        if gps_found:
+            print(self.file_path.split("\\")[-1], " -- Time to GPS:", self.time_to_gps / 1000000, "s")
+        else:
+            print(self.file_path.split("\\")[-1], " -- Time to GPS: NOT FOUND")
+
+        if good_gps_found:
+            print(self.file_path.split("\\")[-1], " -- Time to Good GPS:", self.time_to_good_gps / 1000000, "s")
+        else:
+            print(self.file_path.split("\\")[-1], " -- Time to Good GPS: NOT FOUND")
 
         df = df[df['gps_time'] > 0.0]
         df = df[df['latitude'] > 0.0]
         df = df[df['latitude'].notna()]
         df = df[df['longitude'] > 0.0]
         df = df[df['longitude'].notna()]
+        df = df[df['hdop'] < 99]
 
         return df
 
@@ -90,29 +116,41 @@ class GpsFile:
         # image - (0, 0) in upper left corner; coordinate system - (0, 0) in lower left corner
         return int(x), h_w[1] - int(y)
 
-    def get_interpolated_coordinates(self, time_resolution=0.05):
-        coordinates, times = self.get_coordinates()
+    def get_interpolated_coordinates(self, time_resolution=0.05, return_errors=False):
+        coordinates, times, errors = self.get_coordinates_with_error()
         lat, lon = zip(*coordinates)
 
         interpolated_times = np.arange(times[0], times[-1], time_resolution)
 
         lat_new = [lat[0]]
         lon_new = [lon[0]]
+        error_new = [errors[0]]
 
         for t in interpolated_times[1:-1]:
             i = bisect_left(times, t)
 
-            left_influence = (t - times[i - 1]) / (times[i] - times[i - 1])
-            right_influence = (times[i] - t) / (times[i] - times[i - 1])
+            right_influence = (t - times[i - 1]) / (times[i] - times[i - 1])
+            left_influence = (times[i] - t) / (times[i] - times[i - 1])
 
             lat_n = lat[i - 1] * left_influence + lat[i] * right_influence
             lon_n = lon[i - 1] * left_influence + lon[i] * right_influence
 
+            error_n_orientation = errors[i - 1][0] * left_influence + errors[i][0] * right_influence
+            error_n_major = errors[i - 1][1] * left_influence + errors[i][1] * right_influence
+            error_n_minor = errors[i - 1][2] * left_influence + errors[i][2] * right_influence
+            error_n = (error_n_orientation, error_n_major, error_n_minor)
+
             lat_new.append(lat_n)
             lon_new.append(lon_n)
+            error_new.append(error_n)
 
         lat_new.append(lat[-1])
         lon_new.append(lon[-1])
+        error_new.append(errors[-1])
 
         interpolated_coord = list(zip(lat_new, lon_new))
-        return interpolated_coord, interpolated_times
+
+        if return_errors:
+            return interpolated_coord, interpolated_times, error_new
+        else:
+            return interpolated_coord, interpolated_times
