@@ -31,6 +31,8 @@ import time
 from time import sleep
 from tqdm import tqdm
 
+from simulationClasses.CollisionWarningAlgorithm.dangerZonesCWA import DangerZonesCWA
+from simulationClasses.CollisionWarningAlgorithm.dangerZonesCWA_v2 import DangerZonesCWA_v2
 from simulationClasses.CollisionWarningAlgorithm.radiusCWA import RadiusCWA
 from simulationClasses.CollisionWarningAlgorithm.radiusInterpolationCWA import RadiusInterpolateCWA
 from simulationClasses.cwaEvaluator import CwaEvaluator
@@ -59,12 +61,12 @@ def run():
     0: NO EVALUATION
     1: PLOT_VEHICLE_PATHS
     2: PLOT_DISTANCE_BETWEEN_VEHICLES
-    3: PLOT_DISTANCE_BIKE_VIEW
+    3: PLOT_CWA_PARAMETER
     4: EVALUATE_CWA
     '''
     runs = 1
-    evaluation_mode = 1
-    evaluator = CwaEvaluator(runs=runs, cwa=RadiusInterpolateCWA, evaluation_mode=evaluation_mode)
+    evaluation_mode = 3
+    evaluator = CwaEvaluator(runs=runs, cwa=DangerZonesCWA_v2, evaluation_mode=evaluation_mode)
 
     simulationManager = SimulationManager(step_length=step_length,
                                           speed_controller=SPEED_CONTROL, evaluator=evaluator)

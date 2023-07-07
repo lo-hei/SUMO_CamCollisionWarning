@@ -46,7 +46,7 @@ class CwaEvaluator:
         elif self.evaluation_mode == 2:
             self.plot_distance_between_vehicles()
         elif self.evaluation_mode == 3:
-            self.plot_distance_bike_view()
+            self.plot_cwa_parameter()
         elif self.evaluation_mode == 4:
             self.evaluate_cwa()
         else:
@@ -392,5 +392,59 @@ class CwaEvaluator:
         plt.tight_layout()
         plt.show()
 
-    def plot_distance_bike_view(self, bike=None):
-        pass
+    def plot_cwa_parameter(self):
+        for vehicle_id in self.vehicles.keys():
+            if self.vehicles[vehicle_id].get_type() == "bike":
+                bike = self.vehicles[vehicle_id]
+            elif self.vehicles[vehicle_id].get_type() == "car":
+                car = self.vehicles[vehicle_id]
+
+        fig, ax = plt.subplots(nrows=4, ncols=1, figsize=(10, 10), gridspec_kw={'height_ratios': [1, 1, 1, 1]})
+        ax1 = ax[0]
+        ax2 = ax[1]
+        ax3 = ax[2]
+        ax4 = ax[3]
+
+        ax1.plot(bike.cwa.danger_zones[car.vehicle_id].danger_value)
+        ax1.set_title("danger_value")
+
+        ax2.plot(bike.cwa.danger_zones[car.vehicle_id].diff_in_ttc)
+        ax2.set_title("diff_in_tcc")
+
+        ax3.plot(bike.cwa.danger_zones[car.vehicle_id].danger_zone_size)
+        ax3.set_title("danger_zone_size")
+
+        # warning status
+        warning_status_bike = []
+        times, risk_assessments = zip(*bike.cwa.risk_assessment_history)
+        risk_assessment_values = [d.values() for d in risk_assessments]
+        for t, l in zip(times, risk_assessment_values):
+            if len(l) > 0:
+                max_risk = Risk(max([v.value for v in l]))
+            else:
+                max_risk = Risk.NoRisk
+            warning_status_bike.append([t, max_risk])
+
+        current_ws = warning_status_bike[0][1]
+        start_ws_time = warning_status_bike[0][0]
+
+        for ws in warning_status_bike:
+            if ws[1] == current_ws:
+                continue
+            else:
+                if current_ws.value == 0:
+                    pass
+                elif current_ws.value == 1:
+                    ax4.axvspan(start_ws_time, ws[0], alpha=0.3, color='yellow')
+                elif current_ws.value == 2:
+                    ax4.axvspan(start_ws_time, ws[0], alpha=0.3, color='red')
+
+                current_ws = ws[1]
+                start_ws_time = ws[0]
+
+        ax4.plot(bike.cwa.danger_zones[car.vehicle_id].update_times,
+                 bike.cwa.danger_zones[car.vehicle_id].prob_collision)
+        ax4.set_title("prob_collisions")
+
+        plt.tight_layout()
+        plt.show()

@@ -6,7 +6,7 @@ from simulationClasses.ScenarioRoutes.evaluationScenario import EvaluationScenar
 class RouteManager:
 
     def __init__(self):
-        self.number_of_available_scenarios = 2
+        self.number_of_available_scenarios = 3
         self.scenarios_list = []
         self.gap_between_repeats = 40
 

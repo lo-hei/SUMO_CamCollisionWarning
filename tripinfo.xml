@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2023-06-30 13:56:38 by Eclipse SUMO sumo Version 1.17.0
+<!-- generated on 2023-07-07 19:38:48 by Eclipse SUMO sumo Version 1.17.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
@@ -29,13 +29,13 @@
     </report>
 
     <traci_server>
-        <remote-port value="55355"/>
+        <remote-port value="59348"/>
     </traci_server>
 
 </configuration>
 -->
 
 <tripinfos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/tripinfo_file.xsd">
-    <tripinfo id="car_straight_0" depart="34.00" departLane="54o_0" departPos="5.10" departSpeed="0.00" departDelay="0.00" arrival="64.10" arrivalLane="53i_0" arrivalPos="10.00" arrivalSpeed="11.70" duration="30.10" routeLength="215.10" waitingTime="0.30" waitingCount="1" stopTime="0.00" timeLoss="10.90" rerouteNo="0" devices="tripinfo_car_straight_0" vType="type_car" speedFactor="0.94" vaporized=""/>
-    <tripinfo id="bike_left_0" depart="0.00" departLane="51o_0" departPos="1.70" departSpeed="0.00" departDelay="0.00" arrival="92.40" arrivalLane="52i_0" arrivalPos="10.00" arrivalSpeed="2.56" duration="92.40" routeLength="228.50" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="3.14" rerouteNo="0" devices="tripinfo_bike_left_0" vType="type_bike" speedFactor="1.06" vaporized=""/>
+    <tripinfo id="car_straight_0" depart="34.00" departLane="54o_0" departPos="5.10" departSpeed="0.00" departDelay="0.00" arrival="59.10" arrivalLane="53i_0" arrivalPos="10.00" arrivalSpeed="11.68" duration="25.10" routeLength="215.10" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="5.91" rerouteNo="0" devices="tripinfo_car_straight_0" vType="type_car" speedFactor="0.94" vaporized=""/>
+    <tripinfo id="bike_left_0" depart="0.00" departLane="51o_0" departPos="1.70" departSpeed="0.00" departDelay="0.00" arrival="95.60" arrivalLane="52i_0" arrivalPos="10.00" arrivalSpeed="2.56" duration="95.60" routeLength="228.50" waitingTime="1.50" waitingCount="1" stopTime="0.00" timeLoss="6.34" rerouteNo="0" devices="tripinfo_bike_left_0" vType="type_bike" speedFactor="1.06" vaporized=""/>
 </tripinfos>
