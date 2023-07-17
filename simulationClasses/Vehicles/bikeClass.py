@@ -8,8 +8,9 @@ import simulationClasses.cooperativeAwarenessMessage as cam
 
 class Bike(v.Vehicle):
 
-    def __init__(self, vehicle_id, simulation_manager):
-        super(Bike, self).__init__(vehicle_id=vehicle_id, simulation_manager=simulation_manager)
+    def __init__(self, vehicle_id, simulation_manager, gps_model, transmission_model):
+        super(Bike, self).__init__(vehicle_id=vehicle_id, simulation_manager=simulation_manager,
+                                   gps_model=gps_model, transmission_model=transmission_model)
         self.type = "Bike"
         self.cwa = None
 

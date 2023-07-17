@@ -5,8 +5,10 @@ from simulationClasses.TransmissionModel.transmissionModel import TransmissionMo
 
 class SimpleTransmissionModel(TransmissionModel):
 
-    def __init__(self, model_name):
+    def __init__(self, model_name, vehicle_factor):
         super(SimpleTransmissionModel, self).__init__(model_name)
+
+        self.vehicle_factor = vehicle_factor
 
     def apply_uncertainty_delivery(self, distance):
 
@@ -28,6 +30,11 @@ class SimpleTransmissionModel(TransmissionModel):
                 smaller_prob = self.transmission_accuracy[smaller_bin]
                 bigger_prob = self.transmission_accuracy[bigger_bin]
                 prob = (smaller_prob + bigger_prob) / 2
+
+            if self.vehicle_factor == 0:
+                prob = 1
+            else:
+                prob = prob * (1 / self.vehicle_factor)
 
             if np.random.uniform(0, 1, 1) > prob:
                 return False

@@ -24,6 +24,7 @@ class CooperativeAwarenessMessage:
         # High frequency container
         self.heading = vehicle.heading
         self.speed = vehicle.speed
+
         self.drive_direction = 1
         self.longitudinal_acceleration = vehicle.longitudinal_acceleration
         self.vehicle_length = None

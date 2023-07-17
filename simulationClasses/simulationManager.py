@@ -16,12 +16,15 @@ from simulationClasses.CollisionWarningAlgorithm.collisionWarningAlgorithm impor
 
 class SimulationManager:
 
-    def __init__(self, step_length, speed_controller, evaluator):
+    def __init__(self, step_length, speed_controller, evaluator, gps_model, transmission_model):
         self.activeVehicles = {}  # {vehicle_id: Vehicle}
         self.inactiveVehicles = {}  # {vehicle_id: Vehicle}
         self.step_length = step_length
         self.time = 0
         self.dangerous_situation = False
+
+        self.gps_model = gps_model
+        self.transmission_model = transmission_model
 
         self.evaluator = evaluator
 
@@ -76,7 +79,8 @@ class SimulationManager:
                 # create new Vehicle
                 if "bike" in v_id:
                     # create new bike
-                    new_bike = Bike(vehicle_id=v_id, simulation_manager=self)
+                    new_bike = Bike(vehicle_id=v_id, simulation_manager=self,
+                                    gps_model=self.gps_model, transmission_model=self.transmission_model)
 
                     if self.evaluator:
                         new_bike.cwa = self.evaluator.cwa(new_bike)
@@ -85,7 +89,8 @@ class SimulationManager:
                     helper.color_vehicle_green(v_id)
                 elif "car" in v_id:
                     # create new car
-                    new_car = Car(vehicle_id=v_id, simulation_manager=self)
+                    new_car = Car(vehicle_id=v_id, simulation_manager=self,
+                                  gps_model=self.gps_model, transmission_model=self.transmission_model)
                     self.activeVehicles[v_id] = new_car
                     helper.color_vehicle_blue(v_id)
                 else:

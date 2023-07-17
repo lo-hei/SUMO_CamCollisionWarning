@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2023-07-07 19:38:48 by Eclipse SUMO sumo Version 1.17.0
+<!-- generated on 2023-07-17 18:43:47 by Eclipse SUMO sumo Version 1.17.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
@@ -21,6 +21,7 @@
     <processing>
         <collision.action value="remove"/>
         <collision.check-junctions value="true"/>
+        <collision.mingap-factor value="1.5"/>
     </processing>
 
     <report>
@@ -29,13 +30,17 @@
     </report>
 
     <traci_server>
-        <remote-port value="59348"/>
+        <remote-port value="56564"/>
     </traci_server>
 
 </configuration>
 -->
 
 <tripinfos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/tripinfo_file.xsd">
-    <tripinfo id="car_straight_0" depart="34.00" departLane="54o_0" departPos="5.10" departSpeed="0.00" departDelay="0.00" arrival="59.10" arrivalLane="53i_0" arrivalPos="10.00" arrivalSpeed="11.68" duration="25.10" routeLength="215.10" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="5.91" rerouteNo="0" devices="tripinfo_car_straight_0" vType="type_car" speedFactor="0.94" vaporized=""/>
-    <tripinfo id="bike_left_0" depart="0.00" departLane="51o_0" departPos="1.70" departSpeed="0.00" departDelay="0.00" arrival="95.60" arrivalLane="52i_0" arrivalPos="10.00" arrivalSpeed="2.56" duration="95.60" routeLength="228.50" waitingTime="1.50" waitingCount="1" stopTime="0.00" timeLoss="6.34" rerouteNo="0" devices="tripinfo_bike_left_0" vType="type_bike" speedFactor="1.06" vaporized=""/>
+    <tripinfo id="bike_left_0" depart="0.00" departLane="51o_0" departPos="1.70" departSpeed="0.00" departDelay="0.00" arrival="48.50" arrivalLane=":0_10_0" arrivalPos="6.98" arrivalSpeed="2.49" duration="48.50" routeLength="118.18" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="2.34" rerouteNo="0" devices="tripinfo_bike_left_0" vType="type_bike" speedFactor="1.06" vaporized="collision"/>
+    <tripinfo id="car_straight_0" depart="34.00" departLane="54o_0" departPos="5.10" departSpeed="0.00" departDelay="0.00" arrival="48.50" arrivalLane=":0_1_0" arrivalPos="8.05" arrivalSpeed="8.60" duration="14.50" routeLength="105.85" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="5.62" rerouteNo="0" devices="tripinfo_car_straight_0" vType="type_car" speedFactor="0.94" vaporized="collision"/>
+    <tripinfo id="car_straight_1" depart="94.00" departLane="54o_0" departPos="5.10" departSpeed="0.00" departDelay="0.00" arrival="117.90" arrivalLane="53i_0" arrivalPos="10.00" arrivalSpeed="11.87" duration="23.90" routeLength="215.10" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="5.93" rerouteNo="0" devices="tripinfo_car_straight_1" vType="type_car" speedFactor="1.08" vaporized=""/>
+    <tripinfo id="bike_left_1" depart="61.00" departLane="51o_0" departPos="1.70" departSpeed="0.00" departDelay="0.00" arrival="155.30" arrivalLane="52i_0" arrivalPos="10.00" arrivalSpeed="2.56" duration="94.30" routeLength="228.50" waitingTime="0.30" waitingCount="1" stopTime="0.00" timeLoss="5.05" rerouteNo="0" devices="tripinfo_bike_left_1" vType="type_bike" speedFactor="1.01" vaporized=""/>
+    <tripinfo id="car_straight_2" depart="154.00" departLane="54o_0" departPos="5.10" departSpeed="0.00" departDelay="0.00" arrival="180.00" arrivalLane="53i_0" arrivalPos="10.00" arrivalSpeed="10.48" duration="26.00" routeLength="215.10" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="5.64" rerouteNo="0" devices="tripinfo_car_straight_2" vType="type_car" speedFactor="0.83" vaporized=""/>
+    <tripinfo id="bike_left_2" depart="120.00" departLane="51o_0" departPos="1.70" departSpeed="0.00" departDelay="0.00" arrival="215.20" arrivalLane="52i_0" arrivalPos="10.00" arrivalSpeed="2.50" duration="95.20" routeLength="228.50" waitingTime="1.10" waitingCount="1" stopTime="0.00" timeLoss="5.95" rerouteNo="0" devices="tripinfo_bike_left_2" vType="type_bike" speedFactor="1.03" vaporized=""/>
 </tripinfos>

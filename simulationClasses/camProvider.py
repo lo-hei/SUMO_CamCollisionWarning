@@ -11,20 +11,28 @@ from simulationClasses.TransmissionModel.simpleTransmissionModel import SimpleTr
 
 class CamProvider:
 
-    def __init__(self, vehicle):
+    def __init__(self, vehicle, gps_model, transmission_model):
         self.vehicle = vehicle
 
+        # vehicle_factor < 1 means more precision, = 0 means perfect conditions
         if self.vehicle.get_type() == "car":
-            vehicle_factor = 0.4
-        elif self.vehicle.get_type() == "bike":
             vehicle_factor = 1
+        elif self.vehicle.get_type() == "bike":
+            vehicle_factor = 0.75
 
-        self.gps_model = SimpleGpsModel("GpsModels-internal", vehicle_factor=vehicle_factor)
-        self.gps_model.load_model()
-        self.transmission_model = SimpleTransmissionModel("TransmissionModel-preTest")
-        self.transmission_model.load_model(vehicle_type=self.vehicle.get_type())
+        vehicle_factor_transmission_model = 1
+        self.use_gps_heading = True
+        self.use_gps_speed = True
 
         self.update_rate = 1        # in seconds
+
+        self.gps_model = SimpleGpsModel(gps_model, vehicle_id=self.vehicle.vehicle_id,
+                                        vehicle_factor=vehicle_factor)
+        self.gps_model.load_model()
+        self.transmission_model = SimpleTransmissionModel(transmission_model,
+                                                          vehicle_factor=vehicle_factor_transmission_model)
+        self.transmission_model.load_model(vehicle_type=self.vehicle.get_type())
+
         # self.current_cam = self.generate_cam()
         self.last_cam_generated_time = self.vehicle.simulation_manager.time
 
@@ -37,12 +45,19 @@ class CamProvider:
         fix_longitude = gps_fix["longitude"]
         fix_time = gps_fix["time"]
         fix_error = gps_fix["error"]
+        if self.use_gps_heading:
+            if not gps_fix["heading"] is None:
+                cooperative_awareness_message.heading = gps_fix["heading"]
+        if self.use_gps_speed:
+            if not gps_fix["speed"] is None:
+                cooperative_awareness_message.speed = gps_fix["speed"]
 
         self.vehicle.add_cam_path_position(fix_latitude, fix_longitude)
 
         cooperative_awareness_message.latitude = fix_latitude
         cooperative_awareness_message.longitude = fix_longitude
         cooperative_awareness_message.gps_time = fix_time
+
         if fix_error is None:
             cooperative_awareness_message.semi_major_confidence = None
             cooperative_awareness_message.semi_minor_confidence = None

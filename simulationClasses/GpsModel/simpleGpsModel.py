@@ -22,9 +22,10 @@ def shift_position(old_lat, old_lon, shift_m_lat, shift_m_long):
 
 
 class SimpleGpsModel(GpsModel):
-    def __init__(self, model_name, vehicle_factor):
+    def __init__(self, model_name, vehicle_id, vehicle_factor):
         super(SimpleGpsModel, self).__init__(model_name)
 
+        self.vehicle_id = vehicle_id
         self.vehicle_factor = vehicle_factor
 
         self.errors = []
@@ -36,6 +37,8 @@ class SimpleGpsModel(GpsModel):
         self.fix_longitude = None
         self.fix_error = None
         self.fix_time = None
+        self.heading = None
+        self.speed = None
 
     def update_current_fix(self, real_latitude, real_longitude, real_time):
         # check for updating the gps_fix
@@ -64,21 +67,55 @@ class SimpleGpsModel(GpsModel):
             d_point = self.generate_deviation_point(self.errors[0])
             self.d_points.append(d_point)
 
-            self.fix_latitude = real_latitude + smoothed_d_point[0]
-            self.fix_longitude = real_longitude + smoothed_d_point[1]
+            last_latitude = self.fix_latitude
+            last_longitude = self.fix_longitude
+            last_time = self.fix_time
+
+            self.fix_latitude = real_latitude + (smoothed_d_point[0] * self.vehicle_factor)
+            self.fix_longitude = real_longitude + (smoothed_d_point[1] * self.vehicle_factor)
             self.fix_time = real_time
             self.fix_error = self.errors[0]
+
+            if last_latitude is not None:
+                if "bike" in self.vehicle_id:
+                    self.heading = self.calculate_heading(p1=(last_latitude, last_longitude),
+                                                          p2=(self.fix_latitude, self.fix_longitude))
+
+                    self.speed = self.calculate_speed(p1=(last_latitude, last_longitude),
+                                                      p2=(self.fix_latitude, self.fix_longitude),
+                                                      t1=last_time, t2=self.fix_time)
             self.errors.pop(0)
 
             return True
         else:
             return False
 
+    def calculate_heading(self, p1, p2):
+        if p1 == p2:
+            return None
+        v1 = (p2[0] - p1[0], p2[1] - p1[1])
+        v1_u = v1 / np.linalg.norm(v1)
+        v2_u = (1, 0)
+        heading_rad = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+        heading_deg = heading_rad * 180 / math.pi
+        return heading_deg
+
+    def calculate_speed(self, p1, p2, t1, t2):
+        s = math.dist(p1, p2)
+        t = abs(t2 - t1)
+        if not t == 0:
+            v = s / t
+            return v
+        else:
+            return 0
+
     def get_current_fix(self):
         return {"latitude": self.fix_latitude,
                 "longitude": self.fix_longitude,
                 "time": self.fix_time,
-                "error": self.fix_error}
+                "error": self.fix_error,
+                "heading": self.heading,
+                "speed": self.speed}
 
     def simulate_error(self, n):
         LONGTIME = 20

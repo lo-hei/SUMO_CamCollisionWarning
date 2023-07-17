@@ -18,8 +18,8 @@ class CamFile:
     def load_data(self):
         df = pd.read_csv(self.file_path, sep=",", skipinitialspace=True)
 
-        df = df[df['receiveSendTime'] > 6000000000000]
-        df["receiveSendTime"] = df["receiveSendTime"] / 1000000
+        # df = df[df['receiveSendTime'] > 6000000000000]
+        # df["receiveSendTime"] = df["receiveSendTime"] / 1000000
         df["latitude"] = df["latitude"] * 0.0000001
         df["longitude"] = df["longitude"] * 0.0000001
 

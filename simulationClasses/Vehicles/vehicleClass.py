@@ -8,7 +8,7 @@ import simulationClasses.camProvider as camProvider
 
 class Vehicle:
 
-    def __init__(self, vehicle_id: str, simulation_manager):
+    def __init__(self, vehicle_id: str, simulation_manager, gps_model, transmission_model):
         self.vehicle_id = vehicle_id
         self.simulation_manager = simulation_manager
 
@@ -30,7 +30,7 @@ class Vehicle:
         self.gps_path = []
         self.cam_path = []
 
-        self.cam_provider = camProvider.CamProvider(self)
+        self.cam_provider = camProvider.CamProvider(self, gps_model=gps_model, transmission_model=transmission_model)
         # self.update_vehicle_attributes()
 
     def update_vehicle_attributes(self):

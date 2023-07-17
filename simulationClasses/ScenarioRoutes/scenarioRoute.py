@@ -53,12 +53,11 @@ class ScenarioRoute:
         self.jmIgnoreFoeProb = self.__jmIgnoreFoeProb
         self.impatience = self.__impatience
 
-
     def tweak(self):
         # changes starting-parameter by a small amount
 
-        self.jmIgnoreFoeProb = get_random_prob_mean_1_or_1()
-        self.jmIgnoreJunctionFoeProb = get_random_prob_mean_1_or_1()
+        self.jmIgnoreFoeProb = 1
+        self.jmIgnoreJunctionFoeProb = 1
         self.impatience = random.choice([0, 1])
 
         self.start_bike = self.__start_bike + get_random_change_max_6()

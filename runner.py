@@ -61,15 +61,20 @@ def run():
     0: NO EVALUATION
     1: PLOT_VEHICLE_PATHS
     2: PLOT_DISTANCE_BETWEEN_VEHICLES
-    3: PLOT_CWA_PARAMETER
-    4: EVALUATE_CWA
+    3: PLOT_DISTANCE_BETWEEN_CWA
+    4: PLOT_CWA_PARAMETER
+    5: PLOT_POC_ERROR
+    6: ANALYSE_CWA_PARAMETER
+    7: EVALUATE_CWA
     '''
-    runs = 1
-    evaluation_mode = 3
+    runs = 3
+    evaluation_mode = [3]
     evaluator = CwaEvaluator(runs=runs, cwa=DangerZonesCWA_v2, evaluation_mode=evaluation_mode)
 
     simulationManager = SimulationManager(step_length=step_length,
-                                          speed_controller=SPEED_CONTROL, evaluator=evaluator)
+                                          speed_controller=SPEED_CONTROL, evaluator=evaluator,
+                                          gps_model="GpsModel-perfect-handlebar",
+                                          transmission_model="TransmissionModel-preTest")
 
     # this script has been called from the command line. It will start sumo as a
     # server, then connect and run
@@ -84,6 +89,7 @@ def run():
                  "--tripinfo-output", "tripinfo.xml",
                  "--step-length", str(step_length),
                  "--collision-output", "collisions.txt",
+                 "--collision.mingap-factor", "1.5",
                  "--collision.action", "remove",
                  "--collision.check-junctions"])
 
@@ -95,7 +101,7 @@ def run():
         traci.simulationStep()
         simulationManager.simulation_step()
 
-        current_run = math.ceil(simulationManager.time / simulationManager.evaluator.route_manager.gap_between_repeats)
+        current_run = math.ceil(simulationManager.time / simulationManager.evaluator.route_manager.gap_between_repeats) - 1
         p_bar.n = current_run
         p_bar.refresh()
 
@@ -104,6 +110,7 @@ def run():
     traci.load([sumoBinary, "-c", "data/cross.sumocfg",
                  "--tripinfo-output", "tripinfo.xml",
                  "--step-length", str(step_length),
+                 "--collision-output", "collisions.txt",
                  "--collision.mingap-factor", "0",
                  "--collision.action", "remove",
                  "--collision.check-junctions"])

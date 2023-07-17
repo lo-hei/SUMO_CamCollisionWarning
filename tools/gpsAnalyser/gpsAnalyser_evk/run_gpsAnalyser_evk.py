@@ -7,7 +7,7 @@ from tools.gpsAnalyser.utils.gpsPlotter import GpsPlotter
 
 
 def run():
-    gps_cam_log_name = "GPS_Test_23_06/GpsCamLog_7"
+    gps_cam_log_name = "GPS_Test_23_06/GpsCamLog_5"
     available_files = ["internal_GPS", "externalACM0_GPS", "externalACM1_GPS", "externalACM2_GPS"]
     file_plotter = load_data(gps_cam_log_name=gps_cam_log_name, available_files=available_files)
 
@@ -20,15 +20,15 @@ def run():
 
     # gps_plotter.plot_gps_track_on_map("externalACM0_GPS", interval=interval)
     # gps_plotter.plot_gps_track_interpolation(file_names=["externalACM1_GPS", "externalACM2_GPS"], interval=interval, interpolation=True, dots=True)
-    # gps_plotter.plot_gps_error(file_name="externalACM0_GPS", interval=interval)
+    gps_plotter.plot_gps_error(file_name="externalACM0_GPS", interval=interval)
     # gps_plotter.plot_gps_error(file_name="externalACM1_GPS", interval=interval)
-    # gps_plotter.plot_gps_error(file_name="externalACM2_GPS", interval=interval)
-    gps_plotter.plot_gps_error(file_name="internal_GPS", interval=interval)
+    gps_plotter.plot_gps_error(file_name="externalACM2_GPS", interval=interval)
+    # gps_plotter.plot_gps_error(file_name="externalACM1_GPS", interval=interval)
     ''' styles = [histogram, map, drift, heatmap] '''
     # gps_plotter.plot_gps_deviation(baseline="externalACM0_GPS", comparison="externalACM0_GPS", style="map")
 
-    # gps_model_tool.create_model(gps_file="externalACM2_GPS", model_name="GpsModels-internal")
-    # gps_model_tool.use_model(model_name="stored_GpsModels-internal", seconds_to_simulate=50)
+    gps_model_tool.create_model(gps_file="externalACM0_GPS", model_name="GpsModel-bad-bottombracket")
+    # gps_model_tool.use_model(model_name="GpsModel-perfect-bottombracket", seconds_to_simulate=50)
 
 
 def load_data(gps_cam_log_name, available_files):

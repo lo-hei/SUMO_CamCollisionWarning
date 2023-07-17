@@ -3,8 +3,9 @@ import simulationClasses.Vehicles.vehicleClass as vehicle
 
 class Car(vehicle.Vehicle):
 
-    def __init__(self, vehicle_id, simulation_manager):
-        super(Car, self).__init__(vehicle_id=vehicle_id, simulation_manager=simulation_manager)
+    def __init__(self, vehicle_id, simulation_manager, gps_model, transmission_model):
+        super(Car, self).__init__(vehicle_id=vehicle_id, simulation_manager=simulation_manager,
+                                  gps_model=gps_model, transmission_model=transmission_model)
         self.type = "Car"
 
     def update(self):

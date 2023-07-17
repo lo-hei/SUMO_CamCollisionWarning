@@ -29,7 +29,7 @@ class GpsModelTool(GpsAnalyser):
 
         gps_model.heatmap = heatmap
         gps_model.heatmap_size = heatmap_size
-        gps_model.gps_frequency = self.detect_gps_frequency(gps_file_name=gps_file, plot=False)
+        gps_model.gps_frequency = self.detect_gps_frequency(gps_file_name=gps_file, bin_size=0.1, plot=False)
 
         self.analyse_error(gps_file_name=gps_file)
         self.model.save_model()
