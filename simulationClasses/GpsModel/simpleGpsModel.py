@@ -31,7 +31,7 @@ class SimpleGpsModel(GpsModel):
         self.errors = []
         self.d_points = []
 
-        self.next_update_time = None
+        self.next_update_time = 0
 
         self.fix_latitude = None
         self.fix_longitude = None
@@ -39,6 +39,7 @@ class SimpleGpsModel(GpsModel):
         self.fix_time = None
         self.heading = None
         self.speed = None
+        self.acc = None
 
     def update_current_fix(self, real_latitude, real_longitude, real_time):
         # check for updating the gps_fix
@@ -81,9 +82,19 @@ class SimpleGpsModel(GpsModel):
                     self.heading = self.calculate_heading(p1=(last_latitude, last_longitude),
                                                           p2=(self.fix_latitude, self.fix_longitude))
 
+                    last_speed = deepcopy(self.speed)
+
                     self.speed = self.calculate_speed(p1=(last_latitude, last_longitude),
                                                       p2=(self.fix_latitude, self.fix_longitude),
                                                       t1=last_time, t2=self.fix_time)
+
+                    new_speed = deepcopy(self.speed)
+
+                    if last_speed and new_speed:
+                        self.acc = self.calculate_acc(v1=last_speed, v2=new_speed, t1=last_time, t2=self.fix_time)
+                    else:
+                        self.acc = 0
+
             self.errors.pop(0)
 
             return True
@@ -109,13 +120,18 @@ class SimpleGpsModel(GpsModel):
         else:
             return 0
 
+    def calculate_acc(self, v1, v2, t1, t2):
+        a = (v2 - v1) / (t2 - t1)
+        return a
+
     def get_current_fix(self):
         return {"latitude": self.fix_latitude,
                 "longitude": self.fix_longitude,
                 "time": self.fix_time,
                 "error": self.fix_error,
                 "heading": self.heading,
-                "speed": self.speed}
+                "speed": self.speed,
+                "acc": self.acc}
 
     def simulate_error(self, n):
         LONGTIME = 20

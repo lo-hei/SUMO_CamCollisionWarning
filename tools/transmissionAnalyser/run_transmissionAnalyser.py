@@ -5,8 +5,8 @@ from tools.transmissionAnalyser.utils.transmissionPlotter import TransmissionPlo
 def run():
     transmission_test_folder = "Transmission_Test_23_06"
     gps_cam_log_file = ["GpsCamLog_13", "GpsCamLog_11"]
-    start_if_gps_signal = False
-    end_in_sync = False
+    start_if_gps_signal = True
+    end_in_sync = True
 
     transmission_plotter = TransmissionPlotter(transmission_test_folder=transmission_test_folder,
                                                gps_cam_log_file=gps_cam_log_file,
@@ -18,7 +18,7 @@ def run():
     transmission_plotter.plot_transmissions_on_map()
     transmission_plotter.plot_transmission_success_on_distance()
     # transmission_plotter.plot_transmission_time_on_distance()
-    transmission_plotter.plot_transmission_accuracy_on_distance(bin_size=50)
+    transmission_plotter.plot_transmission_accuracy_on_distance(bin_size=10)
 
     transmission_model_tool.create_model(model_name="TransmissionModel-mosel",
                                          bin_size=50, transmission_direction=2, vehicle_type="bike")

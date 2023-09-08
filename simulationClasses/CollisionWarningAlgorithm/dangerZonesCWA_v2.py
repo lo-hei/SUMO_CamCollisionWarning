@@ -262,9 +262,10 @@ class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
         self.extrapolate_time = 30
         self.extrapolate_timestep = 0.5
 
-        self.danger_range_decrease_by_1s = 5
-        self.warning_interval = [0.60, 0.8]
-        self.collision_interval = [0.8, 1]
+        self.dv_normal_brake = 50
+        self.danger_range_decrease_by_1s = 3
+        self.warning_interval = [0.35, 0.75]
+        self.collision_interval = [0.75, 1]
 
         self.danger_zones = {}  # {vehicle_id: DangerZone, v_id: dZ, ... }
 
@@ -321,6 +322,9 @@ class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
             if not cams[-1]:
                 continue
 
+            if "bike" in vehicle_id_other:
+                continue
+
             # check if CAM message is valid
             if cams[-1].gps_time is None:
                 continue
@@ -334,10 +338,16 @@ class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
             else:
                 new_cam = False
 
+            if not self.bike.gps_latitude:
+                self.set_risk(vehicle_id_other, no_risk=True)
+                print("SKIP, due to no coordinates - ", vehicle_id_other)
+                continue
+
             # if distance between vehicles is too big, skip
             if math.dist((self.bike.gps_latitude, self.bike.gps_longitude),
                          (cams[-1].latitude, cams[-1].longitude)) > self.distance_to_attention:
                 self.set_risk(vehicle_id_other, no_risk=True)
+                print("SKIP, due to too big distance between vehicles - ", vehicle_id_other)
                 continue
 
             # if heading is wrong between vehicles, skip
@@ -345,9 +355,21 @@ class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
                                     (self.bike.heading - 90 + 0.5 * self.side_angle_to_attention) % 360)
             angle_interval_left = ((self.bike.heading + 90 - 0.5 * self.side_angle_to_attention) % 360,
                                    (self.bike.heading + 90 + 0.5 * self.side_angle_to_attention) % 360)
-            if not ((angle_interval_right[0] < cams[-1].heading < angle_interval_right[1]) or
-                    (angle_interval_left[0] < cams[-1].heading < angle_interval_left[1])):
+
+            in_interval = False
+
+            for angle_interval in [angle_interval_left, angle_interval_right]:
+                if angle_interval[0] <= angle_interval[-1]:
+                    if angle_interval[0] <= cams[-1].heading <= angle_interval[1]:
+                        in_interval = True
+                else:
+                    if (angle_interval[0] <= cams[-1].heading <= 360) or (0 <= cams[-1].heading <= angle_interval[-1]):
+                        in_interval = True
+
+            if not in_interval:
+                print(cams[-1].heading, angle_interval_right, angle_interval_left)
                 self.set_risk(vehicle_id_other, no_risk=True)
+                print("SKIP, due to wrong heading between vehicles - ", vehicle_id_other)
                 continue
 
             # add own movement
@@ -378,7 +400,7 @@ class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
                                             time=self.movement_own["time"][-1])
 
             # calculate other position and extrapolate trajectory, if new cam
-            if new_cam:
+            if new_cam or (vehicle_id_other not in self.extrapolated_vehicle_paths.keys()):
                 extrap_lat_other, extrap_lon_other, extrap_times_other, extrap_dist_other = \
                     self.extrapolate_trajectory(lon=self.last_cams_from_vehicles[vehicle_id_other].longitude,
                                                 lat=self.last_cams_from_vehicles[vehicle_id_other].latitude,
@@ -418,6 +440,7 @@ class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
             # if trajectories do not intersect at all - no danger for both vehicles
             if poc is None:
                 self.set_risk(vehicle_id_other, no_risk=True)
+                # print("SKIP, due to no intersection of trajectories - ", vehicle_id_other)
                 continue
 
             # calculate dangerZone_size with poc and the error-ellipses
@@ -447,6 +470,10 @@ class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
             self.danger_zones[vehicle_id_other].set_time_to_poc_1(time_to_poc_own)
 
             # check if other is in front of poc or already passed -> if has passed: no Danger
+            if not (extrap_lat_other[0] and extrap_lon_other[0]):
+                self.set_risk(vehicle_id_other, no_risk=True)
+                continue
+
             if math.dist((extrap_lat_other[0], extrap_lon_other[0]), current_pos_other) + \
                     math.dist(current_pos_other, poc) == math.dist((extrap_lat_other[0], extrap_lon_other[0]), poc):
                 time_to_poc_other = self.calculate_time_to_poc(
@@ -456,6 +483,14 @@ class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
             else:
                 self.set_risk(vehicle_id_other, no_risk=True)
                 continue
+
+            if self.danger_zones[vehicle_id_other].get_time_to_poc_1() is None:
+                self.set_risk(vehicle_id_other, no_risk=True)
+                continue
+            if self.danger_zones[vehicle_id_other].get_time_to_poc_2() is None:
+                self.set_risk(vehicle_id_other, no_risk=True)
+                continue
+
             diff_in_ttc = abs(self.danger_zones[vehicle_id_other].get_time_to_poc_1() -
                               self.danger_zones[vehicle_id_other].get_time_to_poc_2())
 
@@ -535,12 +570,12 @@ class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
             return 100
 
         if dist < normal_brake_distance:
-            danger_value = 50 + 50 * (1 - (dist - emergency_brake_distance) / (
+            danger_value = self.dv_normal_brake + self.dv_normal_brake * (1 - (dist - emergency_brake_distance) / (
                     normal_brake_distance - emergency_brake_distance))
             return danger_value
 
         time_after_normal_break = time_to_dist - time_of_normal_brake
-        danger_value = 50
+        danger_value = self.dv_normal_brake
         while danger_value > 0:
             if time_after_normal_break > 1:
                 time_after_normal_break -= 1

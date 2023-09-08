@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from simulationClasses.utils import helper
 import simulationClasses.CollisionWarningAlgorithm.collisionWarningAlgorithm as cwa
 
@@ -7,8 +9,8 @@ class RadiusCWA(cwa.CollisionWarningAlgorithm):
     def __init__(self, bike):
         super(RadiusCWA, self).__init__(bike=bike)
 
-        self.radius_warning = 6
-        self.radius_collision = 3
+        self.radius_warning = 8
+        self.radius_collision = 4
 
     def check(self):
         """
@@ -22,6 +24,16 @@ class RadiusCWA(cwa.CollisionWarningAlgorithm):
             if cams[-1]:
                 current_other_cam = cams[-1]
             else:
+                continue
+
+            if "bike" in other_vehicle_id:
+                continue
+
+            # check if CAM message is valid
+            if cams[-1].gps_time is None:
+                continue
+
+            if not self.bike.gps_latitude:
                 continue
 
             own_longitude = self.bike.longitude
@@ -45,3 +57,6 @@ class RadiusCWA(cwa.CollisionWarningAlgorithm):
 
             else:
                 self.risk_assessment[other_vehicle_id] = cwa.Risk.NoRisk
+
+        self.risk_assessment_history.append([deepcopy(self.bike.simulation_manager.time),
+                                             deepcopy(self.risk_assessment)])

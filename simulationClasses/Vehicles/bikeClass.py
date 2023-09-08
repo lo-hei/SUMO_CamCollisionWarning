@@ -14,6 +14,8 @@ class Bike(v.Vehicle):
         self.type = "Bike"
         self.cwa = None
 
+        self.last_cam_update_time = 0
+
         self.send_cams = []
         self.received_cams = {}  # {vehicle_id: [cam_0, cam_1 ...]}
 
@@ -24,7 +26,7 @@ class Bike(v.Vehicle):
         self.update_vehicle_attributes()
 
         # updating own cam message in cam_provider
-        self.update_send_cam()
+        self.cam_provider.get_current_cam(position_receiver=None)
 
         # asking for new CAMs in cam_provider
         self.update_received_cams()
@@ -37,28 +39,27 @@ class Bike(v.Vehicle):
 
     def update_received_cams(self):
         # asking every other Vehicle.cam_provider for new CAMs
-        for vehicle_id, vehicle in self.simulation_manager.activeVehicles.items():
 
-            if vehicle_id == self.vehicle_id:
-                continue
+        current_time = self.simulation_manager.time
+        time_cam_available = self.last_cam_update_time + self.cam_provider.transmission_model.transmission_time
 
-            position_self = [self.latitude, self.longitude]
-            current_vehicle_cam = vehicle.cam_provider.get_current_cam(position_receiver=position_self)
-            if current_vehicle_cam:
+        if (current_time - time_cam_available) > self.cam_provider.update_rate:
+            self.last_cam_update_time = current_time
+            for vehicle_id, vehicle in self.simulation_manager.activeVehicles.items():
 
-                if vehicle_id not in self.received_cams.keys():
-                    self.received_cams[vehicle_id] = [current_vehicle_cam]
+                if vehicle_id == self.vehicle_id:
+                    continue
 
-                # TODO: check if CAM is newer
-                elif not self.received_cams[vehicle_id][-1].cam_id == current_vehicle_cam.cam_id:
+                position_self = [self.latitude, self.longitude]
+                current_vehicle_cam = vehicle.cam_provider.get_current_cam(position_receiver=position_self)
+                if current_vehicle_cam:
+
+                    if vehicle_id not in self.received_cams.keys():
+                        self.received_cams[vehicle_id] = [current_vehicle_cam]
+
+                    # TODO: check if CAM is newer
+                    # elif not self.received_cams[vehicle_id][-1].cam_id == current_vehicle_cam.cam_id:
                     self.received_cams[vehicle_id].append(current_vehicle_cam)
-
-    def update_send_cam(self):
-        # updates the own cams of the vehicle
-        current_cam = self.cam_provider.get_current_cam(position_receiver=None)
-        if len(self.send_cams) > 0:
-            if not self.send_cams[-1].cam_id == current_cam.cam_id:
-                self.send_cams.append(current_cam)
 
     def get_current_received_cams(self) -> List[cam.CooperativeAwarenessMessage]:
         # returns the current CAM from every other Vehicle

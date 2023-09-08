@@ -11,7 +11,7 @@ class BikeLeftCarStraight(sr.ScenarioRoute):
         number_cars = 1
 
         start_bike = 0
-        start_car = 34
+        start_car = 32
 
         super(BikeLeftCarStraight, self).__init__(name=name, number_bikes=number_bikes, number_cars=number_cars,
                                                   repeats=repeats, start_bike=start_bike, start_car=start_car)
@@ -23,12 +23,12 @@ class BikeLeftCarStraight(sr.ScenarioRoute):
         with open("simulationData/cross.rou.xml", "w") as routes:
             print("<routes>", file=routes)
 
-            print("<vType id='type_car' accel='2' decel='4.5' sigma='0.8' tau='0.6' length='5' minGap='2.5' maxSpeed='12' "
+            print("<vType id='type_car' accel='2' decel='4.5' sigma='0.4' tau='0.6' length='5' minGap='2.5' maxSpeed='12' "
                   "jmIgnoreFoeProb='%i' jmIgnoreJunctionFoeProb='%i' impatience='%i' guiShape='passenger'/>"
                   % (self.jmIgnoreFoeProb, self.jmIgnoreJunctionFoeProb, self.impatience),
                   file=routes)
 
-            print("<vType id='type_bike' accel='1.2' decel='3' sigma='0.8' tau='0.3' length='1.6' minGap='1' maxSpeed='2.56' "
+            print("<vType id='type_bike' accel='1.2' decel='3' sigma='0.4' tau='0.3' length='1.6' minGap='1' maxSpeed='2.56' "
                   "jmIgnoreFoeProb='%i' jmIgnoreJunctionFoeProb='%i' impatience='%i' guiShape='bicycle'/>"
                   % (self.jmIgnoreFoeProb, self.jmIgnoreJunctionFoeProb, self.impatience),
                   file=routes)

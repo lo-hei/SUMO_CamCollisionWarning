@@ -61,7 +61,7 @@ class GpsPlotter(GpsAnalyser):
         # image.save(output_path)
 
     def plot_gps_track_interpolation(self, file_names, dots, interpolation=True, interval=None):
-        plt.figure(figsize=(10, 10))
+        plt.figure(figsize=(9, 4))
         color_lines = ["blue", "orange", "green"]
         color_dots = ["darkblue", "darkorange", "darkgreen"]
 
@@ -89,6 +89,9 @@ class GpsPlotter(GpsAnalyser):
 
         plt.ylim(min(lat) - 0.0001, max(lat) + 0.0001)
         plt.xlim(min(long) - 0.0001, max(long) + 0.0001)
+        plt.legend()
+        plt.xlabel("Latitude")
+        plt.ylabel("Longitude")
         plt.tight_layout()
         plt.show()
 
@@ -97,11 +100,18 @@ class GpsPlotter(GpsAnalyser):
 
         file = self.file_plotter[file_name]
 
-        coord, _, errors = file.get_coordinates_with_error()
+        coord, errors_time, errors = file.get_coordinates_with_error()
+
+        # correct time
+        time_start = errors_time[0]
+        errors_time = [e - time_start for e in errors_time]
 
         if not interval is None:
             coord = coord[:interval[1]]
             coord = coord[interval[0]:]
+
+            errors_time = errors_time[:interval[1]]
+            errors_time = errors_time[interval[0]:]
 
             errors = errors[:interval[1]]
             errors = errors[interval[0]:]
@@ -117,12 +127,12 @@ class GpsPlotter(GpsAnalyser):
         for i in range(len(err_major_orientation)):
             center = np.array([long[i], lat[i]])
             # divide by 100 for conversion from Centimeter to Meter
-            major_ax = err_semi_major[i] / 100
-            minor_ax = err_semi_minor[i] / 100
+            major_ax = err_semi_major[i] * 2
+            minor_ax = err_semi_minor[i] * 2
             angle_deg = err_major_orientation[i]
 
             ellipse_patch = mpatches.Ellipse(center, major_ax, minor_ax, angle_deg,
-                                             fc='orange', alpha=0.1, ls='solid', ec='orange', lw=3.)
+                                             fc='orange', alpha=0.2, ls='solid', ec='orange', lw=3.)
 
             ax[0].add_patch(ellipse_patch)
 
@@ -133,34 +143,104 @@ class GpsPlotter(GpsAnalyser):
         ax[0].grid()
 
         ax1_twimx = ax[1].twinx()
-        bins = np.arange(0, 40, 1)
+        bins = np.arange(0, 20, 1)
 
         _, bins, patches = ax[1].hist(np.clip(err_semi_major, bins[0], bins[-1]), bins=bins, alpha=0.4, color="orange")
 
         patches[-1].set_facecolor('red')
 
-        xlabels = np.arange(0, 40, 2).astype(str)
+        xlabels = np.arange(0, 20, 2).astype(str)
         xlabels[-1] += '+'
 
         N_labels = len(xlabels)
         # ax[1].set_title(str("Time to first GPS-fix:" + file.time_to_gps))
         ax[1].set_xticks(2 * np.arange(N_labels))
         ax[1].set_xticklabels(xlabels)
-        ax[1].set_xlim([0, 40])
+        ax[1].set_xlim([0, 20])
+        ax[1].set_xlabel("GPS-Error in meter")
+        ax[1].set_ylabel("Number of GPS-Points with this error")
 
         density = gaussian_kde(err_semi_major)
-        xs = np.linspace(0, 40, 200)
+        xs = np.linspace(0, 20, 200)
         density.covariance_factor = lambda: .25
         density._compute_covariance()
         ax1_twimx.plot(xs, density(xs))
+        ax1_twimx.set_ylabel("Percentage of GPS-Points with this error")
 
         over_20 = len([e for e in err_semi_major if e > 20])
-        ax[2].plot(err_semi_major)
+        print(len(errors_time), errors_time)
+        print(len(err_semi_major), err_semi_major)
+        ax[2].plot(errors_time, err_semi_major)
         ax[2].set_ylim([0, 20])
+        if interval:
+            ax[2].set_xlim(interval)
+        ax[2].set_ylabel("GPS-Error in Meter")
+        ax[2].set_xlabel("Time in seconds")
         ax[2].axvspan(0, over_20, alpha=0.5, color='red')
         avg_err_semi_major = sum(err_semi_major) / len(err_semi_major)
-        ax[2].axhline(avg_err_semi_major, linestyle='--', label=str("avg error = " + str(round(avg_err_semi_major, 4))))
-        ax[2].legend()
+        # ax[2].axhline(avg_err_semi_major, linestyle='--', label=str("average error = " + str(round(avg_err_semi_major, 4))))
+        # ax[2].legend()
+
+        plt.tight_layout()
+        plt.show()
+
+    def plot_gps_error_v2(self, file_name, file_plotter_list, plot_seconds=120):
+        fig = plt.figure(figsize=(6, 3))
+
+        min_x_time = 0
+        to_plot_time = []
+        to_plot_error = []
+
+        for i, file_plotter in enumerate(file_plotter_list):
+
+            file = file_plotter[file_name]
+
+            coord, errors_time, errors = file.get_coordinates_with_error()
+
+            if len(errors_time) == 0 or len(errors) == 0:
+                continue
+
+            # correct time
+            time_start = errors_time[0]
+            errors_time = [e - time_start for e in errors_time]
+
+            if not coord:
+                print(file_name, "-- No coordinates found")
+                return None
+
+            err_major_orientation, err_semi_major, err_semi_minor = zip(*errors)
+
+            if (min_x_time > errors_time[-1] and errors_time[-1] > 100) or (min_x_time == 0):
+                min_x_time = errors_time[-1]
+
+            to_plot_time.append(errors_time)
+            to_plot_error.append(err_semi_major)
+
+        min_x_time = 120
+
+        for i, time, error in zip(list(range(len(to_plot_time))), to_plot_time, to_plot_error):
+            over_20 = len([e for e in error if e > 20])
+            pos_error_avg = int((len(error[over_20:]) / 2) + over_20)
+            if len(error[pos_error_avg:]) == 0:
+                avg_err_semi_major = sum(error[-10:]) / len(error[-10:])
+            else:
+                avg_err_semi_major = sum(error[pos_error_avg:]) / len(error[pos_error_avg:])
+            plt.axhline(avg_err_semi_major, xmin=0.8, linestyle='--', c=str("C" + str(i)),
+                        label=str("average error = " + str(round(avg_err_semi_major, 4))))
+
+        for i, time, error in zip(list(range(len(to_plot_time))), to_plot_time, to_plot_error):
+            over_20 = len([e for e in error if e > 20])
+            plt.axvspan(0, over_20, alpha=0.1, color='red')
+
+            start_alpha = len([i for i in time if i < math.floor(min_x_time * 0.78)])
+            plt.plot(time[:start_alpha], error[:start_alpha], c=str("C" + str(i)), alpha=1)
+            plt.plot(time[start_alpha-1:], error[start_alpha-1:], c=str("C" + str(i)), alpha=0.4)
+
+        plt.xlim([0, min_x_time])
+        plt.ylim([0, 20])
+        plt.ylabel("GPS-Error in meter")
+        plt.xlabel("Time in seconds")
+        plt.legend()
 
         plt.tight_layout()
         plt.show()
@@ -266,3 +346,65 @@ class GpsPlotter(GpsAnalyser):
             plt.vlines(0, -50, 50, colors="black")
             plt.tight_layout()
             plt.show()
+
+    def plot_avg_error_with_time_to_gps(self):
+        scenarios = ["perfekt, erschwert, Innenstadt, schlecht"]
+
+        # all values from evaluation-charts
+        # avg is calculated by hand and calculator and rounded to 2 digits
+
+        found_gps_perfekt = [0, 0, 0, 0]
+        time_to_gps_prefekt = [0, 7, 12, 10]
+        avg_error_perfect = [0.67, 1.07, 3.11, 9.6]
+
+        found_gps_hard = [0, 0, 20, 27]
+        time_to_gps_hard = [0, 3, 35, 5]
+        avg_error_hard = [0.88, 1.42, 6.00, 6.64]
+
+        found_gps_city = [0, 10, 20, 20]
+        time_to_gps_city = [0, 10, 9, 8]
+        avg_error_city = [1.11, 1.65, 5.28, 8.15]
+
+        found_gps_bad = [0, 50, 77, 77]
+        time_to_gps_bad = [0, 8, 35, 50]
+        avg_error_bad = [1.43, 2.05, 10, 9.2]
+
+
+        fig = plt.figure(figsize=(8, 3))
+        ax1 = fig.add_subplot(111)
+
+        barWidth = 0.2
+        br1 = np.arange(4)
+        br2 = [x + barWidth for x in br1]
+        br3 = [x + barWidth for x in br2]
+        br4 = [x + barWidth for x in br3]
+
+        # perfect
+        ax1.bar(br1, avg_error_perfect, color='orange', width=barWidth, linewidth=0,
+                edgecolor='grey', label='perfekt')
+
+        # hard
+        ax1.bar(br2, avg_error_hard, color='darkorange', width=barWidth, linewidth=0,
+                edgecolor='grey', label='erschwert')
+
+        # city
+        ax1.bar(br3, avg_error_city, color='red', width=barWidth, linewidth=0,
+                edgecolor='grey', label='Innenstadt')
+
+        # bad
+        ax1.bar(br4, avg_error_bad, color='darkred', width=barWidth, linewidth=0,
+                edgecolor='grey', label='schlecht')
+
+        # Adding Xticks
+        plt.xlabel('GPS-Empfänger Position', fontweight='bold', fontsize=10)
+        plt.ylabel('Durchschn. GPS_Error in Meter', fontweight='bold', fontsize=8)
+        plt.xticks([r + 1.5*barWidth for r in range(4)],
+                   ['Referenz', 'Lenker', 'Tretlager', 'Rahmen'])
+
+        plt.legend()
+        plt.gca().yaxis.grid(True)
+        plt.tight_layout()
+        plt.show()
+
+
+

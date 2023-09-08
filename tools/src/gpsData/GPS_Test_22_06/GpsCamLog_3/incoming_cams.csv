@@ -1,0 +1,1 @@
+receiveSendTime, messageID, generationDeltaTime, longitude, latitude, semiMajorOrientation, semiMajorConfidence, semiMinorConfidence, altitude, altitudeConfidence, headingValue, headingConfidence, speedValue, speedConfidence, driveDirection, last_rssi, min_rssi, max_rssi 

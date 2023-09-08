@@ -55,8 +55,9 @@ class TransmissionModelTool(TransmissionAnalyser):
             else:
                 received = False
 
+            print("pos_receiver", pos_receiver)
             # find index for position of receiver with same time
-            i = min(range(len(pos_receiver["time"])), key=lambda j: abs(pos_receiver["time"][j] - time))
+            i = min(range(len(pos_receiver["gps_time"])), key=lambda j: abs(pos_receiver["gps_time"][j] - time))
 
             distance = distance_earth(lat, lon, pos_receiver["latitude"][i], pos_receiver["longitude"][i])
             transmission_log.append([distance, received])
@@ -116,7 +117,7 @@ class TransmissionModelTool(TransmissionAnalyser):
                 receive_time = incoming_times[incoming_ids.index(message_id)]
 
                 # find index for position of receiver with same time
-                i = min(range(len(pos_receiver["time"])), key=lambda j: abs(pos_receiver["time"][j] - time))
+                i = min(range(len(pos_receiver["gps_time"])), key=lambda j: abs(pos_receiver["gps_time"][j] - time))
 
                 distance = distance_earth(lat, lon, pos_receiver["latitude"][i], pos_receiver["longitude"][i])
                 transmission_time = receive_time - time

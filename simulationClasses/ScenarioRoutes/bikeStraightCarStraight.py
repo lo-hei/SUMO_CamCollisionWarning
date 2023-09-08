@@ -11,7 +11,7 @@ class BikeStraightCarStraight(sr.ScenarioRoute):
         number_cars = 1
 
         start_bike = 0
-        start_car = 34
+        start_car = 24
 
         super(BikeStraightCarStraight, self).__init__(name=name, number_bikes=number_bikes, number_cars=number_cars,
                                                       repeats=repeats, start_bike=start_bike, start_car=start_car)

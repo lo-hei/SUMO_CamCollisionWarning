@@ -1,6 +1,7 @@
 from simulationClasses.ScenarioRoutes.bikeLeftCarStraight import BikeLeftCarStraight
 from simulationClasses.ScenarioRoutes.bikeStraightCarStraight import BikeStraightCarStraight
 from simulationClasses.ScenarioRoutes.evaluationScenario import EvaluationScenario
+from simulationClasses.ScenarioRoutes.transmissionScenario import TransmissionScenario
 
 
 class RouteManager:
@@ -27,3 +28,10 @@ class RouteManager:
         # scenario.tweak()
         scenario.create_route_file()
         return scenario
+
+    def get_transmission_scenario(self, repeats):
+        scenario = TransmissionScenario(repeats=repeats, gap_between_repeats=self.gap_between_repeats)
+        # scenario.tweak()
+        scenario.create_route_file()
+        return scenario
+

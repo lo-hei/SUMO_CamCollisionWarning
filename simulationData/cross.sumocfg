@@ -3,7 +3,7 @@
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="cross.net.xml"/>
+        <net-file value="sumo_nets/two_simple_curves.net.xml"/>
         <route-files value="cross.rou.xml"/>
     </input>
 

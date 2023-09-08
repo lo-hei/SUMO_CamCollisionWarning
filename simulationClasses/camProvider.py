@@ -16,21 +16,26 @@ class CamProvider:
 
         # vehicle_factor < 1 means more precision, = 0 means perfect conditions
         if self.vehicle.get_type() == "car":
-            vehicle_factor = 1
-        elif self.vehicle.get_type() == "bike":
             vehicle_factor = 0.75
+        elif self.vehicle.get_type() == "bike":
+            vehicle_factor = 1
 
         vehicle_factor_transmission_model = 1
-        self.use_gps_heading = True
-        self.use_gps_speed = True
+        # max_range_transmission_model should be NONE, otherwise no model is used
+        max_range_transmission_model = None
+        self.use_gps_heading = False
+        self.use_gps_speed = False
+        self.use_gps_imu = False
 
-        self.update_rate = 1        # in seconds
+        self.update_rate = 1       # in seconds
 
-        self.gps_model = SimpleGpsModel(gps_model, vehicle_id=self.vehicle.vehicle_id,
-                                        vehicle_factor=vehicle_factor)
+        self.current_cam = None
+
+        self.gps_model = SimpleGpsModel(gps_model, vehicle_id=self.vehicle.vehicle_id, vehicle_factor=vehicle_factor)
         self.gps_model.load_model()
         self.transmission_model = SimpleTransmissionModel(transmission_model,
-                                                          vehicle_factor=vehicle_factor_transmission_model)
+                                                          vehicle_factor=vehicle_factor_transmission_model,
+                                                          max_range=max_range_transmission_model)
         self.transmission_model.load_model(vehicle_type=self.vehicle.get_type())
 
         # self.current_cam = self.generate_cam()
@@ -51,6 +56,9 @@ class CamProvider:
         if self.use_gps_speed:
             if not gps_fix["speed"] is None:
                 cooperative_awareness_message.speed = gps_fix["speed"]
+        if self.use_gps_imu:
+            if not gps_fix["acc"] is None:
+                cooperative_awareness_message.longitudinal_acceleration = gps_fix["acc"]
 
         self.vehicle.add_cam_path_position(fix_latitude, fix_longitude)
 
@@ -75,25 +83,35 @@ class CamProvider:
         current_time = self.vehicle.simulation_manager.time
         time_cam_available = self.last_cam_generated_time + self.transmission_model.transmission_time
 
-        if (current_time - time_cam_available) > self.update_rate:
-
-            if position_receiver is None:
-                # Then cam_message is requested by yourself
-                delivery = True
-            else:
-                position_self = [self.vehicle.latitude, self.vehicle.longitude]
-                distance = math.dist(position_receiver, position_self)
-
-                if self.transmission_model.apply_uncertainty_delivery(distance=distance):
-                    delivery = True
-                else:
-                    delivery = False
-
-            if delivery:
+        if position_receiver is None:
+            # Then cam_message is requested by yourself
+            if ((current_time - time_cam_available) > self.update_rate) or (self.current_cam is None):
                 self.current_cam = self.generate_cam()
                 self.last_cam_generated_time = current_time
-                return self.current_cam
 
-            else:
+                if self.current_cam:
+                    if len(self.vehicle.send_cams) > 0:
+                        self.vehicle.send_cams.append(self.current_cam)
+                    else:
+                        self.vehicle.send_cams.append(self.current_cam)
+
+            return self.current_cam
+        else:
+            position_self = [self.vehicle.latitude, self.vehicle.longitude]
+
+            if (not position_self[0]) or (not position_receiver[0]):
                 return None
+
+            distance = math.dist(position_receiver, position_self)
+
+            if self.transmission_model.apply_uncertainty_delivery(distance=distance):
+                delivery = True
+            else:
+                delivery = False
+
+        if delivery:
+            self.current_cam.update_id()
+            return self.current_cam
+        else:
+            return None
 

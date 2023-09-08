@@ -1,3 +1,5 @@
+from random import randrange
+
 import traci  # noqa
 import time
 
@@ -5,12 +7,15 @@ import time
 class CooperativeAwarenessMessage:
 
     def __init__(self, vehicle):
+        self.vehicle = vehicle
+
         self.creation_time = vehicle.simulation_manager.time
         self.generation_delta_time = 0
         self.gps_time = None
         self.vehicle_type = vehicle.get_type()
 
-        self.cam_id = vehicle.vehicle_id + "_" + str(self.creation_time)
+        self.cam_id = randrange(10000000)
+        self.send_time = vehicle.simulation_manager.time
         self.vehicle_id = vehicle.vehicle_id
 
         # Basic Container
@@ -32,3 +37,7 @@ class CooperativeAwarenessMessage:
         self.curvature = 0
         self.curvature_confidence = 0
         self.yaw_rate = 0
+
+    def update_id(self):
+        self.cam_id = randrange(10000000)
+        self.send_time = self.vehicle.simulation_manager.time

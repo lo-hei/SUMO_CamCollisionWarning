@@ -8,14 +8,14 @@ import simulationClasses.ScenarioRoutes.scenarioRoute as sr
 class EvaluationScenario(sr.ScenarioRoute):
 
     def __init__(self, repeats, gap_between_repeats):
-        name = "Evaluation Scenario, where Bike is coming from the right and random Cars are " \
-               "spawned from all other directions"
+        name = "Evaluation Scenario, where Bike is coming from one direction " \
+               "and car is coming from either left or right (seen from the bike)"
 
         number_bikes = 1
         number_cars = 1
 
         start_bike = 0
-        start_car = 34
+        start_car = 30
 
         super(EvaluationScenario, self).__init__(name=name, number_bikes=number_bikes, number_cars=number_cars,
                                                  repeats=repeats, start_bike=start_bike, start_car=start_car)
@@ -27,17 +27,20 @@ class EvaluationScenario(sr.ScenarioRoute):
         with open("simulationData/cross.rou.xml", "w") as routes:
             print("<routes>", file=routes)
 
-            print(
-                "<vType id='type_car' accel='2' decel='4.5' sigma='0.8' tau='0.6' length='5' minGap='2.5' maxSpeed='12' "
-                "jmIgnoreFoeProb='%i' jmIgnoreJunctionFoeProb='%i' impatience='%i' guiShape='passenger'/>"
-                % (self.jmIgnoreFoeProb, self.jmIgnoreJunctionFoeProb, self.impatience),
-                file=routes)
+            for r in range(self.repeats):
+                print(
+                    "<vType id='type_car_%i' accel='2' decel='4.5' sigma='0.8' tau='0.6' length='5' minGap='2.5' maxSpeed='12' "
+                    "jmIgnoreFoeProb='%i' jmIgnoreJunctionFoeProb='%i' impatience='%i' guiShape='passenger'/>"
+                    % (r, self.jmIgnoreFoeProb, self.jmIgnoreJunctionFoeProb, self.impatience),
+                    file=routes)
 
-            print(
-                "<vType id='type_bike' accel='1.2' decel='3' sigma='0.8' tau='0.3' length='1.6' minGap='1' maxSpeed='2.56' "
-                "jmIgnoreFoeProb='%i' jmIgnoreJunctionFoeProb='%i' impatience='%i' guiShape='bicycle'/>"
-                % (self.jmIgnoreFoeProb, self.jmIgnoreJunctionFoeProb, self.impatience),
-                file=routes)
+                print(
+                    "<vType id='type_bike_%i' accel='1.2' decel='3' sigma='0.8' tau='0.3' length='1.6' minGap='1' maxSpeed='2.56' "
+                    "jmIgnoreFoeProb='%i' jmIgnoreJunctionFoeProb='%i' impatience='%i' guiShape='bicycle'/>"
+                    % (r, self.jmIgnoreFoeProb, self.jmIgnoreJunctionFoeProb, self.impatience),
+                    file=routes)
+
+                # self.tweak()
 
             print("<route id='left_straight' edges='51o 1i 2o 52i' />", file=routes)
             print("<route id='left_turnLeft' edges='51o 1i 3o 53i' />", file=routes)
@@ -57,30 +60,53 @@ class EvaluationScenario(sr.ScenarioRoute):
 
             for r in range(self.repeats):
 
-                random_bike_path = random.choices([0, 1, 2], weights=[2, 2, 1], k=1)[0]
+                random_bike_path = random.choices([0, 1, 2, 3], weights=[1, 1, 1, 1], k=1)[0]
+                random_car_left_or_right = random.choices([0, 1], weights=[1, 1], k=1)[0]
+
                 if random_bike_path == 0:
                     # bike is going straight
-                    print('<vehicle id="bike_straight_%i" type="type_bike" route="left_straight" depart="%i" />' %
-                          (r, self.start_bike + self.gap_between_repeats * r), file=routes)
+                    print('<vehicle id="bike_straight_%i" type="type_bike_%i" route="left_straight" depart="%i" />' %
+                          (r, r, self.start_bike + self.gap_between_repeats * r), file=routes)
+                    if random_car_left_or_right == 0:
+                        print('<vehicle id="car_straight_%i" type="type_car_%i" route="down_straight" depart="%i" />' %
+                              (r, r, self.start_car + self.gap_between_repeats * r), file=routes)
+                    elif random_car_left_or_right == 1:
+                        print('<vehicle id="car_straight_%i" type="type_car_%i" route="up_straight" depart="%i" />' %
+                              (r, r, self.start_car + self.gap_between_repeats * r), file=routes)
+
                 elif random_bike_path == 1:
-                    # bike is turning left
-                    print('<vehicle id="bike_left_%i" type="type_bike" route="left_turnLeft" depart="%i" />' %
-                          (r, self.start_bike + self.gap_between_repeats * r), file=routes)
+                    # bike is going straight
+                    print('<vehicle id="bike_straight_%i" type="type_bike_%i" route="right_straight" depart="%i" />' %
+                          (r, r, self.start_bike + self.gap_between_repeats * r), file=routes)
+                    if random_car_left_or_right == 0:
+                        print('<vehicle id="car_straight_%i" type="type_car_%i" route="down_straight" depart="%i" />' %
+                              (r, r, self.start_car + self.gap_between_repeats * r), file=routes)
+                    elif random_car_left_or_right == 1:
+                        print('<vehicle id="car_straight_%i" type="type_car_%i" route="up_straight" depart="%i" />' %
+                              (r, r, self.start_car + self.gap_between_repeats * r), file=routes)
+
                 elif random_bike_path == 2:
-                    # bike is turning right
-                    print('<vehicle id="bike_right_%i" type="type_bike" route="left_turnRight" depart="%i" />' %
-                          (r, self.start_bike + self.gap_between_repeats * r), file=routes)
+                    # bike is going straight
+                    print('<vehicle id="bike_straight_%i" type="type_bike_%i" route="up_straight" depart="%i" />' %
+                          (r, r, self.start_bike + self.gap_between_repeats * r), file=routes)
+                    if random_car_left_or_right == 0:
+                        print('<vehicle id="car_straight_%i" type="type_car_%i" route="left_straight" depart="%i" />' %
+                              (r, r, self.start_car + self.gap_between_repeats * r), file=routes)
+                    elif random_car_left_or_right == 1:
+                        print('<vehicle id="car_straight_%i" type="type_car_%i" route="right_straight" depart="%i" />' %
+                              (r, r, self.start_car + self.gap_between_repeats * r), file=routes)
 
-                car_paths = ["right_straight", "right_turnLeft", "right_turnRight",
-                             "up_straight", "up_turnLeft", "up_turnRight",
-                             "down_straight", "down_turnLeft", "down_turnRight"]
+                elif random_bike_path == 3:
+                    # bike is going straight
+                    print('<vehicle id="bike_straight_%i" type="type_bike_%i" route="down_straight" depart="%i" />' %
+                          (r, r, self.start_bike + self.gap_between_repeats * r), file=routes)
+                    if random_car_left_or_right == 0:
+                        print('<vehicle id="car_straight_%i" type="type_car_%i" route="left_straight" depart="%i" />' %
+                              (r, r, self.start_car + self.gap_between_repeats * r), file=routes)
+                    elif random_car_left_or_right == 1:
+                        print('<vehicle id="car_straight_%i" type="type_car_%i" route="right_straight" depart="%i" />' %
+                              (r, r, self.start_car + self.gap_between_repeats * r), file=routes)
 
-                random_car_path_i = random.choices([0, 1, 2, 3, 4, 5, 6, 7, 8],
-                                                   weights=[2, 3, 1, 3, 1, 1, 3, 3, 1], k=1)[0]
-                random_car_path = car_paths[random_car_path_i]
-
-                print('<vehicle id="car_straight_%i" type="type_car" route="%s" depart="%i" />' %
-                      (r, random_car_path, self.start_car + self.gap_between_repeats * r), file=routes)
                 self.tweak()
 
             print("</routes>", file=routes)

@@ -32,6 +32,7 @@ from time import sleep
 from tqdm import tqdm
 
 from simulationClasses.CollisionWarningAlgorithm.dangerZonesCWA import DangerZonesCWA
+from simulationClasses.CollisionWarningAlgorithm.dangerZonesCWA_production import DangerZonesCWA_production
 from simulationClasses.CollisionWarningAlgorithm.dangerZonesCWA_v2 import DangerZonesCWA_v2
 from simulationClasses.CollisionWarningAlgorithm.radiusCWA import RadiusCWA
 from simulationClasses.CollisionWarningAlgorithm.radiusInterpolationCWA import RadiusInterpolateCWA
@@ -66,15 +67,17 @@ def run():
     5: PLOT_POC_ERROR
     6: ANALYSE_CWA_PARAMETER
     7: EVALUATE_CWA
+    8: EVALUATE_TRANSMISSION
     '''
-    runs = 3
-    evaluation_mode = [3]
-    evaluator = CwaEvaluator(runs=runs, cwa=DangerZonesCWA_v2, evaluation_mode=evaluation_mode)
+    runs = 100
+    evaluation_mode = [7]
+    evaluator = CwaEvaluator(runs=runs, cwa=DangerZonesCWA_v2, evaluation_mode=evaluation_mode,
+                             title="keiner")
 
     simulationManager = SimulationManager(step_length=step_length,
                                           speed_controller=SPEED_CONTROL, evaluator=evaluator,
-                                          gps_model="GpsModel-perfect-handlebar",
-                                          transmission_model="TransmissionModel-preTest")
+                                          gps_model="GpsModel-city-handlebar",
+                                          transmission_model="TransmissionModel-mosel")
 
     # this script has been called from the command line. It will start sumo as a
     # server, then connect and run
@@ -89,9 +92,10 @@ def run():
                  "--tripinfo-output", "tripinfo.xml",
                  "--step-length", str(step_length),
                  "--collision-output", "collisions.txt",
-                 "--collision.mingap-factor", "1.5",
+                 "--collision.mingap-factor", "0",
                  "--collision.action", "remove",
-                 "--collision.check-junctions"])
+                 "--collision.check-junctions",
+                 "--time-to-teleport", "-1"])
 
     """execute the TraCI control loop"""
     p_bar = tqdm(range(runs))
@@ -106,14 +110,6 @@ def run():
         p_bar.refresh()
 
     evaluator.evaluate()
-
-    traci.load([sumoBinary, "-c", "data/cross.sumocfg",
-                 "--tripinfo-output", "tripinfo.xml",
-                 "--step-length", str(step_length),
-                 "--collision-output", "collisions.txt",
-                 "--collision.mingap-factor", "0",
-                 "--collision.action", "remove",
-                 "--collision.check-junctions"])
 
     traci.close()
     sys.stdout.flush()

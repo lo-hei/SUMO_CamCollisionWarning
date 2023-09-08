@@ -7,6 +7,7 @@ class Car(vehicle.Vehicle):
         super(Car, self).__init__(vehicle_id=vehicle_id, simulation_manager=simulation_manager,
                                   gps_model=gps_model, transmission_model=transmission_model)
         self.type = "Car"
+        self.send_cams = []
 
     def update(self):
         # everything that has to happen in one simulation-step for a car
@@ -19,3 +20,4 @@ class Car(vehicle.Vehicle):
 
     def get_type(self):
         return "car"
+

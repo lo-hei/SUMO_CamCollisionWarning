@@ -48,7 +48,6 @@ class TransmissionAnalyser:
 
         self.sync_times()
 
-
     def cut_start_all_files(self):
         files = [self.evk_1_camFile_incoming,
                  self.evk_1_camFile_outgoing,

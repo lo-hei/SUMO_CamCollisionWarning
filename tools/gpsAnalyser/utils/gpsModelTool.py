@@ -1,6 +1,9 @@
 import math
 import random
 
+from matplotlib import colors
+from matplotlib.ticker import FormatStrFormatter, StrMethodFormatter
+
 from tools.gpsAnalyser.utils.gpsAnalyser import GpsAnalyser
 from simulationClasses.GpsModel.gpsModel import GpsModel
 from tools.gpsAnalyser.utils.helper import *
@@ -31,7 +34,7 @@ class GpsModelTool(GpsAnalyser):
         gps_model.heatmap_size = heatmap_size
         gps_model.gps_frequency = self.detect_gps_frequency(gps_file_name=gps_file, bin_size=0.1, plot=False)
 
-        self.analyse_error(gps_file_name=gps_file)
+        self.analyse_error(gps_file_name=gps_file, plot=False)
         self.model.save_model()
         print("GPS Model saved!")
 
@@ -49,15 +52,19 @@ class GpsModelTool(GpsAnalyser):
         # generate error (orientation, major, minor) for every timestamp
         errors = self.simulate_error(n=len(fixes))
         # generate deviation for every timestamp
-        deviation = self.generate_deviation_points(len(fixes), errors, plot=False)
+        deviation_error, deviation_combine = self.generate_deviation_points(len(fixes), errors, plot=False)
         # smooth deviation
-        smoothed_deviation = self.smooth_deviation(deviation)
+        smoothed_deviation = self.smooth_deviation(deviation_combine)
         # add deviation to fixes
-        gps_path = self.shift_deviation(fixes, smoothed_deviation)
+        gps_path = self.shift_deviation(fixes, deviation_combine)
         # smooth with moving average
-        # gps_path_smoothed = self.smooth_gps_path(gps_path, plot=True)
+        gps_path_smoothed = self.smooth_gps_path(gps_path, plot=False)
 
-        self.plot_model_gps(gps_path, errors)
+        gps_path_2 = self.shift_deviation(fixes, deviation_error)
+        gps_path_smoothed_2 = self.smooth_gps_path(gps_path_2, plot=False)
+
+        self.plot_model_gps(gps_path, errors, second_gps_path=gps_path_smoothed, third_gps_path=gps_path_smoothed_2)
+        # self.plot_gps_error()
 
     def get_fixes_from_real_path(self, seconds_to_simulate):
         time_resolution = 0.1
@@ -81,7 +88,7 @@ class GpsModelTool(GpsAnalyser):
 
         return fixes
 
-    def analyse_error(self, gps_file_name):
+    def analyse_error(self, gps_file_name, plot=False):
         LONGTIME = 20
 
         gps_file = self.file_plotter[gps_file_name]
@@ -129,9 +136,9 @@ class GpsModelTool(GpsAnalyser):
         distinct_values_longtime_changes = list(set(not_zero_changes_longtime))
 
         changes_probs = {}
-        for v in distinct_values_changes:
-            v_count = not_zero_changes.count(v)
-            v_prob = v_count / len(not_zero_changes)
+        for v in changes:
+            v_count = changes.count(v)
+            v_prob = v_count / len(changes)
             changes_probs[v] = round(v_prob, 3)
 
         longtime_changes_probs = {}
@@ -146,6 +153,16 @@ class GpsModelTool(GpsAnalyser):
 
         mean_error_orientation = sum(errors_orientation) / len(errors_orientation)
         self.model.error_orientation = mean_error_orientation
+
+        if plot:
+            print("changes_probs:", changes_probs)
+            plt.figure(figsize=(3, 4))
+            plt.barh(list(changes_probs.keys()), changes_probs.values(), height=0.08, color="darkred")
+            plt.xlabel("Error-Wertänderung")
+            plt.ylabel("Anteil in gesamter Übertragung")
+            plt.ylim([-0.55, 0.45])
+            plt.tight_layout()
+            plt.show()
 
     def simulate_error(self, n):
         LONGTIME = 20
@@ -217,7 +234,29 @@ class GpsModelTool(GpsAnalyser):
             sim_orientation_error.append(np.random.normal(self.model.error_orientation, VARIANZ_IN_ORIENTATION))
 
         sim_error = list(zip(sim_orientation_error, sim_major_error, sim_minor_error))
+
         return sim_error
+
+    def plot_gps_error(self):
+        gps_file_name = "externalACM1_GPS"
+
+        gps_file = self.file_plotter[gps_file_name]
+        _, _, e = gps_file.get_coordinates_with_error()
+        errors_orientation, errors_major, errors_minor = zip(*e)
+
+        plt.figure(figsize=[6, 3])
+        plt.plot(errors_major[20:], c="black", label="tatsächlicher Fehler")
+
+        for c in ['darkred', 'orange']:
+            sim_error = self.simulate_error(n=len(errors_minor) - 20)
+            sim_orientation_error, sim_major_error, sim_minor_error = zip(*sim_error)
+            plt.plot(sim_major_error, c=c, alpha=0.6, label="simulierter Fehler")
+
+        plt.xlabel("Nummer des GPS-Punkts")
+        plt.ylabel("GPS-Fehler in Meter")
+        plt.tight_layout()
+        plt.legend()
+        plt.show()
 
     def generate_heatmap(self, gps_file_name, plot=True):
         SIGMA = 2
@@ -290,20 +329,25 @@ class GpsModelTool(GpsAnalyser):
         heatmap_size = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
 
         if plot:
-            plt.figure(figsize=(10, 10))
+            plt.figure(figsize=(5, 5))
 
-            plt.imshow(heatmap.T, extent=heatmap_size, origin='lower', cmap="viridis")
+            cmap = colors.LinearSegmentedColormap.from_list("", ["white", "darkblue", "orange"])
+
+            plt.imshow(heatmap.T, extent=heatmap_size, origin='lower', cmap=cmap)
 
             plt.xlim([min(x) * ADD_FACTOR, max(x) * ADD_FACTOR])
             plt.ylim([min(y) * ADD_FACTOR, max(y) * ADD_FACTOR])
+            plt.xlabel("Abweichung in der Latitude in Meter")
+            plt.ylabel("Abweichung in der Longitude in Meter")
             plt.hlines(0, -50, 50, colors="black")
             plt.vlines(0, -50, 50, colors="black")
+            plt.colorbar(shrink=0.7)
             plt.tight_layout()
             plt.show()
 
         return heatmap.T, heatmap_size
 
-    def generate_deviation_points(self, points_to_generate, errors, plot=True):
+    def generate_deviation_points(self, points_to_generate, errors, plot=False):
         heatmap_model = self.model.heatmap
         heatmap_model = (heatmap_model - np.min(heatmap_model)) / (np.max(heatmap_model) - np.min(heatmap_model))
         heatmap_size = self.model.heatmap_size
@@ -333,7 +377,8 @@ class GpsModelTool(GpsAnalyser):
         y = np.linspace(ylim[0], ylim[1], yres)
         xx, yy = np.meshgrid(x, y)
 
-        d_points = []
+        d_points_1 = []
+        d_points_2 = []
 
         for i in range(points_to_generate):
             center = (0, 0)
@@ -358,22 +403,30 @@ class GpsModelTool(GpsAnalyser):
             heatmap_error = (heatmap_error - np.min(heatmap_error)) / (np.max(heatmap_error) - np.min(heatmap_error))
 
             # combine both heatmaps
+            # heatmap_combine = heatmap_error
             heatmap_combine = np.add(heatmap_error, heatmap_model)
 
             # select random from combined heatmap
             d_point = random.choices(coordinates_list, weights=heatmap_combine.flatten(), k=100)
-            d_points = d_points + d_point
+            d_points_1 = d_points_1 + d_point
+
+            d_point = random.choices(coordinates_list, weights=heatmap_error.flatten(), k=100)
+            d_points_2 = d_points_2 + d_point
 
         if plot:
-            fig = plt.figure(figsize=(10, 15))
-            fig.add_subplot(3, 1, 1)
-            plt.imshow(heatmap_error, extent=heatmap_size, origin='lower', cmap="viridis")
-            fig.add_subplot(3, 1, 2)
-            plt.imshow(heatmap_model, extent=heatmap_size, origin='lower', cmap="viridis")
-            fig.add_subplot(3, 1, 3)
-            plt.imshow(heatmap_combine, extent=heatmap_size, origin='lower', cmap="viridis")
-            plt.tight_layout()
-            plt.show()
+            cmap = colors.LinearSegmentedColormap.from_list("", ["white", "darkblue", "orange"])
+
+            for heatmap in [heatmap_error, heatmap_model, heatmap_combine]:
+                fig = plt.figure(figsize=(5, 4))
+                # fig.add_subplot(1, 3, 1)
+                plt.imshow(heatmap, extent=heatmap_size, origin='lower', cmap=cmap)
+                plt.hlines(0, heatmap_size[0], heatmap_size[1], colors="black")
+                plt.vlines(0, heatmap_size[2], heatmap_size[3], colors="black")
+                plt.xlabel("Abweichung Latitude in Meter")
+                plt.ylabel("Abweichung Longitude in Meter")
+                plt.colorbar(shrink=0.9)
+                plt.tight_layout()
+                plt.show()
 
         if plot:
             plt.figure(figsize=(10, 5))
@@ -388,7 +441,7 @@ class GpsModelTool(GpsAnalyser):
             plt.tight_layout()
             plt.show()
 
-        return d_points
+        return d_points_1, d_points_2
 
     def detect_gps_frequency(self, gps_file_name, bin_size=0.1, plot=True):
         comparison_file = self.file_plotter[gps_file_name]
@@ -402,8 +455,13 @@ class GpsModelTool(GpsAnalyser):
             gps_frequency[bin] = len([d for d in time_deltas if bin > d >= bin - bin_size]) / len(time_deltas)
 
         if plot:
-            plt.bar(list(gps_frequency.keys()), gps_frequency.values(), width=bin_size*0.8)
-            plt.xlim(0, max(gps_frequency.keys()))
+            print("gps_frequency:", gps_frequency)
+            plt.figure(figsize=(6, 3))
+            plt.bar(list(gps_frequency.keys()), gps_frequency.values(), width=bin_size*0.8, color="darkblue")
+            plt.xlabel("Zeit bis zum nächsten GPS-Fix in Sekunden")
+            plt.ylabel("Anteil in gesamter Übertragung")
+            plt.xlim([0, 3])
+            plt.tight_layout()
             plt.show()
 
         return gps_frequency
@@ -496,8 +554,8 @@ class GpsModelTool(GpsAnalyser):
 
         return smoothed_coords
 
-    def plot_model_gps(self, smoothed_gps_points, errors, dots=True):
-        fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 12), gridspec_kw={'height_ratios': [3, 1]})
+    def plot_model_gps(self, smoothed_gps_points, errors, second_gps_path, third_gps_path, dots=True):
+        fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(8, 8), sharex=True)
 
         # Plot Baseline
         file = self.file_plotter[self.baseline]
@@ -508,19 +566,85 @@ class GpsModelTool(GpsAnalyser):
         lat_baseline, long_baseline = zip(*coord)
         lat_baseline_new, long_baseline_new = zip(*interpolated)
 
-        ax[0].plot(long_baseline_new, lat_baseline_new, "-", c="orange")
-        if dots:
-            ax[0].scatter(long_baseline, lat_baseline, s=15, c="orange")
+        for i, gps_path in enumerate([smoothed_gps_points, second_gps_path, third_gps_path]):
+            # Plot Model-GPS
+            lat_gps, lon_gps = zip(*gps_path)
+            ax[i].plot(lon_gps, lat_gps, "-", c="darkorange")
+            if dots:
+                ax[i].scatter(lon_gps, lat_gps, s=15, c="darkorange", label="simulierter GPS-Pfad")
 
-        # Plot Model-GPS
-        lat_gps, lon_gps = zip(*smoothed_gps_points)
-        ax[0].plot(lon_gps, lat_gps, "-", c="blue")
-        if dots:
-            ax[0].scatter(lon_gps, lat_gps, s=15, c="blue")
+            ax[i].set_xlabel("Latitude")
+            ax[i].set_ylabel("Longitude")
 
-        major_errors = [e for _, e, _ in errors]
-        ax[1].plot(major_errors)
-        ax[1].set_ylim([min(major_errors), max(major_errors)])
+            x_lim = ax[i].get_xlim()
+            y_lim = ax[i].get_ylim()
 
+            ax[i].plot(long_baseline_new, lat_baseline_new, "-", c="black", label="tatsächlicher Pfad")
+            # if dots:
+                # ax[0].scatter(long_baseline, lat_baseline, s=15, c="black", label="tatsächlicher Pfad")
+
+            ax[i].set_xlim(x_lim)
+            ax[i].set_ylim(y_lim)
+            ax[i].legend()
+
+        fig.subplots_adjust(hspace=0)
+        # plt.tight_layout()
+        plt.show()
+
+    def compare_gps_and_model(self, file_name, model_name, seconds_to_simulate):
+        fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(14, 4))
+
+        color_lines = ["black", "orange"]
+        color_dots = [None, "darkorange"]
+        label = ["tatsächlicher Pfad", "GPS Pfad"]
+
+        if self.model is None:
+            gps_model = GpsModel(model_name=model_name)
+            gps_model.load_model()
+            self.model = gps_model
+
+        fixes = self.get_fixes_from_real_path(seconds_to_simulate)
+        errors = self.simulate_error(n=len(fixes))
+        deviation_error, deviation = self.generate_deviation_points(len(fixes), errors, plot=False)
+        smoothed_deviation = self.smooth_deviation(deviation)
+        gps_path = self.shift_deviation(fixes, smoothed_deviation)
+
+        lat_gps, lon_gps = zip(*gps_path)
+        ax[1].plot(lon_gps, lat_gps, "-", c=color_lines[1])
+        ax[1].scatter(lon_gps, lat_gps, s=15, c=color_lines[1])
+
+        x_lim = ax[1].get_xlim()
+        y_lim = ax[1].get_ylim()
+
+        for i, file_name in enumerate([self.baseline, file_name]):
+            file = self.file_plotter[file_name]
+
+            coord, _ = file.get_coordinates()
+
+            interpolated, _ = file.get_interpolated_coordinates(time_resolution=0.1)
+
+            lat, long = zip(*coord)
+            lat_new, long_new = zip(*interpolated)
+
+            if i == 0:
+                ax[0].plot(long_new, lat_new, color=color_lines[i], label=label[i])
+                ax[1].plot(long_new, lat_new, color=color_lines[i], label=label[i])
+            else:
+                ax[0].plot(long_new, lat_new, color=color_lines[i], label=label[i])
+                ax[0].scatter(long, lat, s=15, color=color_dots[i])
+
+        ax[1].plot(lon_gps, lat_gps, "-", c=color_lines[1], label="simulierter GPS-Pfad")
+        ax[1].scatter(lon_gps, lat_gps, s=15, c=color_lines[1])
+
+        ax[0].set_xlim(x_lim)
+        ax[0].set_ylim(y_lim)
+        ax[1].set_xlim(x_lim)
+        ax[1].set_ylim(y_lim)
+        ax[0].legend()
+        ax[1].legend()
+        ax[0].set_xlabel("Latitude")
+        ax[0].set_ylabel("Longitude")
+        ax[1].set_xlabel("Latitude")
+        ax[1].set_ylabel("Longitude")
         plt.tight_layout()
         plt.show()

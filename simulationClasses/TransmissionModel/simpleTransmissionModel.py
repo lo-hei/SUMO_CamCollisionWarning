@@ -5,15 +5,23 @@ from simulationClasses.TransmissionModel.transmissionModel import TransmissionMo
 
 class SimpleTransmissionModel(TransmissionModel):
 
-    def __init__(self, model_name, vehicle_factor):
+    def __init__(self, model_name, vehicle_factor, max_range):
         super(SimpleTransmissionModel, self).__init__(model_name)
 
         self.vehicle_factor = vehicle_factor
+        self.max_range = max_range
 
     def apply_uncertainty_delivery(self, distance):
 
         keys_dist = list(self.transmission_accuracy.keys())
         keys_dist.sort()
+
+        # if self.max_range is set, no model is used.
+        if self.max_range:
+            if distance > self.max_range:
+                return False
+            else:
+                return True
 
         if distance > keys_dist[-1]:
             # if distance is greater than tested range, return FALSE

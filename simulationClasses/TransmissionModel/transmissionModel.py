@@ -17,7 +17,8 @@ class TransmissionModel:
     def load_model(self, vehicle_type):
         if os.path.isdir(self.model_path):
 
-            parameter_path = self.model_path + "parameter_" + str(vehicle_type) + ".json"
+            parameter_path = self.model_path + "parameter_" + "bike" + ".json"
+            # parameter_path = self.model_path + "parameter_" + str(vehicle_type) + ".json"
 
             with open(parameter_path, "r+") as j:
                 parameters = json.load(j)
