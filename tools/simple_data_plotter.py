@@ -298,7 +298,7 @@ def cam_range_warning_times():
 
 
 def cam_sensor_accuracy():
-    X = ['Kein Sensor', 'IMU', 'Tachometer', 'Kompass  ', '    IMU&Tachometer']
+    X = ['Accuracy', 'F1-Score', 'Accuracy \n Warnung', 'Accuracy \n Kollision']
     accuracy = [0.781, 0.788, 0.794, 0.772, 0.802]
     f1_score = [0.827, 0.837, 0.842, 0.841, 0.848]
     accuracy_warning = [0.61, 0.69, 0.62, 0.59, 0.59]
@@ -310,25 +310,60 @@ def cam_sensor_accuracy():
     plt.figure(figsize=(7, 3), dpi=200)
     X_axis = np.arange(len(X))
 
-    plt.axhline(accuracy[0], ls="--", xmin=0.1, color="darkgreen", alpha=0.5)
-    plt.axhline(f1_score[0], ls="--", xmin=0.05, color="yellowgreen", alpha=0.5)
-    plt.axhline(accuracy_warning[0], ls="--", xmin=0.12, color="orange", alpha=0.5)
-    plt.axhline(accuracy_collision[0], ls="--", xmin=0.17, color="darkred", alpha=0.5)
+    no_values, imu_values, speed_values, heading_values, speed_heading_values = [], [], [], [], []
+    for i, values in enumerate([no_values, imu_values, speed_values, heading_values, speed_heading_values]):
+        values.append(accuracy[i])
+        values.append(f1_score[i])
+        values.append(accuracy_warning[i])
+        values.append(accuracy_collision[i])
 
-    plt.bar(X_axis - 0.1, accuracy, 0.15, label='Accuracy', color="darkgreen", alpha=1)
-    plt.bar(X_axis - 0.25, f1_score, 0.15, label='F1-Score', color="yellowgreen", alpha=1)
-    plt.bar(X_axis + 0.1, accuracy_warning, 0.15, label='Accuracy Warnung', color="orange", alpha=1)
-    plt.bar(X_axis + 0.25, accuracy_collision, 0.15, label='Accuracy Kollision', color="darkred", alpha=1)
-
+    plt.bar(X_axis - 0.27, no_values, 0.11, label='Keiner', color="darkgrey", alpha=1)
+    plt.bar(X_axis - 0.11, imu_values, 0.11, label='IMU', color="#000080", alpha=1)
+    plt.bar(X_axis, speed_values, 0.11, label='Tachometer', color="#0F52BA", alpha=1)
+    plt.bar(X_axis + 0.11, heading_values, 0.11, label='Kompass', color="#6593F5", alpha=1)
+    plt.bar(X_axis + 0.22, speed_heading_values, 0.11, label='IMU & Tachometer', color="#73C2FB", alpha=1)
 
     plt.ylim([0.4, 0.9])
     plt.xticks(X_axis, X)
-    plt.xlabel("Zusätzliche Sensoren")
     plt.ylabel("Genauigkeitswert")
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.tight_layout()
     plt.show()
 
+def cam_layout_accuracy():
+    X = ['Accuracy', 'F1-Score', 'Accuracy \n Warnung', 'Accuracy \n Kollision']
+    accuracy = [0.736, 0.570, 0.596]
+    f1_score = [0.768, 0.626, 0.580]
+    accuracy_warning = [0.54, 0.59, 0.56]
+    accuracy_collision = [0.71, 0.74, 0.78]
+
+    plt.figure(figsize=(7, 3), dpi=200)
+    X_axis = np.arange(len(X))
+
+    '''
+    plt.axhline(accuracy[0], ls="--", xmin=0.1, color="darkgreen", alpha=0.5)
+    plt.axhline(f1_score[0], ls="--", xmin=0.05, color="yellowgreen", alpha=0.5)
+    plt.axhline(accuracy_warning[0], ls="--", xmin=0.17, color="orange", alpha=0.5)
+    plt.axhline(accuracy_collision[0], ls="--", xmin=0.22, color="darkred", alpha=0.5)
+    '''
+
+    straight_values, small_curves_values, big_curve_values = [], [], []
+    for i, values in enumerate([straight_values, small_curves_values, big_curve_values]):
+        values.append(accuracy[i])
+        values.append(f1_score[i])
+        values.append(accuracy_warning[i])
+        values.append(accuracy_collision[i])
+
+    plt.bar(X_axis - 0.25, straight_values, 0.2, label='Gerade Straßen', color="darkgrey", alpha=1)
+    plt.bar(X_axis, small_curves_values, 0.2, label='kleine Kurvenradien', color="#000080", alpha=1)
+    plt.bar(X_axis + 0.2, big_curve_values, 0.2, label='großer Kurvenradius', color="#6593F5", alpha=1)
+
+    plt.ylim([0.4, 0.9])
+    plt.xticks(X_axis, X)
+    plt.ylabel("Genauigkeitswert")
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.tight_layout()
+    plt.show()
 
 # gps_error_precision()
 # gps_error_warning_times()
@@ -343,3 +378,4 @@ def cam_sensor_accuracy():
 # cam_range_warning_times()
 
 cam_sensor_accuracy()
+# cam_layout_accuracy()

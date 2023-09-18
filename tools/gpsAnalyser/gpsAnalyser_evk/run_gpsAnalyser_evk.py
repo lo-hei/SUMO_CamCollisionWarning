@@ -38,12 +38,12 @@ def run():
 
     # gps_plotter.plot_gps_track_on_map("externalACM0_GPS", interval=interval)
     # gps_plotter.plot_gps_track_interpolation(file_names=["externalACM0_GPS", "externalACM1_GPS"], interval=interval, interpolation=True, dots=True)
-    gps_plotter.plot_gps_error(file_name="internal_GPS", interval=interval)
-    gps_plotter.plot_gps_error(file_name="externalACM0_GPS", interval=interval)
-    gps_plotter.plot_gps_error(file_name="externalACM1_GPS", interval=interval)
-    gps_plotter.plot_gps_error(file_name="externalACM2_GPS", interval=interval)
+    # gps_plotter.plot_gps_error(file_name="internal_GPS", interval=interval)
+    # gps_plotter.plot_gps_error(file_name="externalACM0_GPS", interval=interval)
+    # gps_plotter.plot_gps_error(file_name="externalACM1_GPS", interval=interval)
+    # gps_plotter.plot_gps_error(file_name="externalACM2_GPS", interval=interval)
 
-    # gps_plotter.plot_avg_error_with_time_to_gps()
+    gps_plotter.plot_avg_error_with_time_to_gps()
 
     '''
     file_plotter_list = load_data(gps_cam_log_name=bad_conditions,
@@ -57,12 +57,12 @@ def run():
     ''' styles = [histogram, map, drift, heatmap] '''
     # gps_plotter.plot_gps_deviation(baseline="externalACM0_GPS", comparison="externalACM0_GPS", style="map")
 
-    gps_model_tool.create_model(gps_file="externalACM0_GPS", model_name="GpsModel-bad-bb")
-    gps_model_tool.create_model(gps_file="externalACM2_GPS", model_name="GpsModel-bad-handlebar")
+    # gps_model_tool.create_model(gps_file="externalACM0_GPS", model_name="GpsModel-bad-bb")
+    # gps_model_tool.create_model(gps_file="externalACM2_GPS", model_name="GpsModel-bad-handlebar")
 
     # gps_model_tool.use_model(model_name="GpsModel-bad-bottombracket", seconds_to_simulate=25)
-    gps_model_tool.compare_gps_and_model(file_name="externalACM0_GPS", model_name="GpsModel-bad-bottombracket",
-                                         seconds_to_simulate=35)
+    # gps_model_tool.compare_gps_and_model(file_name="externalACM0_GPS", model_name="GpsModel-bad-bottombracket",
+    #                                      seconds_to_simulate=35)
 
 def load_data(gps_cam_log_name, available_files):
 

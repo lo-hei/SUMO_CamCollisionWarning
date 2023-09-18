@@ -284,6 +284,27 @@ class CwaEvaluator:
 
         return distances_real_time, distances_real
 
+    def get_cam_distances(self, bike, car):
+        # cam path
+        y_bike_cam_path, x_bike_cam_path, time_bike = zip(*bike.cam_path)
+        y_car_cam_path, x_car_cam_path, time_car = zip(*car.cam_path)
+
+        distances_cam = []
+        distances_cam_time = []
+        for x_bike, y_bike, t_bike in zip(x_bike_cam_path, y_bike_cam_path, time_bike):
+            if (x_bike is None) or (y_bike is None):
+                continue
+            if t_bike >= time_car[0]:
+                last_time = [x for x in time_car if x <= t_bike][-1]
+                last_i = time_car.index(last_time)
+                x_car = x_car_cam_path[last_i]
+                y_car = y_car_cam_path[last_i]
+                if (x_car is None) or (y_car is None):
+                    continue
+                distances_cam.append(math.dist([x_bike, y_bike], [x_car, y_car]))
+                distances_cam_time.append(t_bike)
+        return distances_cam_time, distances_cam
+
     def get_poc(self, bike, car):
         # real path
         y_bike_real_path, x_bike_real_path, time_bike = zip(*bike.real_path)
@@ -462,7 +483,7 @@ class CwaEvaluator:
 
     def plot_distance_between_vehicles(self, bike=None, car=None, only_cwa=False):
 
-        fig, ax = plt.subplots(figsize=(12, 6))
+        fig, ax = plt.subplots(figsize=(5, 3), dpi=200)
 
         if bike is None or car is None:
 
@@ -480,8 +501,8 @@ class CwaEvaluator:
         first_time = distances_real_time[0]
         distances_real_time = [t - first_time for t in distances_real_time]
 
-        ax.plot(distances_real_time, distances_real, color="black", linestyle="-", linewidth="4", alpha=0.4,
-                label="Distance calculated from real Positions")
+        ax.plot(distances_real_time, distances_real, color="black", linestyle="-", linewidth="4", alpha=0.3,
+                label="Tatsächlicher Abstand")
 
 
         if not only_cwa:
@@ -537,8 +558,8 @@ class CwaEvaluator:
                     distances_interpolated.append(math.dist(pos_bike, pos_car))
                     distances_interpolated_time.append(t_bike - first_time)
 
-            ax.plot(distances_interpolated_time, distances_interpolated, color="green", linestyle="-",
-                    label="Distance calculated from cwa-interpolated position")
+            ax.plot(distances_interpolated_time, distances_interpolated, linewidth=2, color="darkgreen", linestyle="-",
+                    label="Interpolierte Distanz im CWA")
 
 
         # warning status
@@ -575,9 +596,10 @@ class CwaEvaluator:
         else:
             XLIM = [round(min(min(distances_real_time), min(distances_interpolated)) / 10) * 10, 25]
             ax.set_xlim(XLIM)
-        YLIM = [0, 150]
+        YLIM = [0, 130]
 
         ax.set_ylim(YLIM)
+        ax.set_xlim([5, 25])
 
         major_x_ticks = np.arange(XLIM[0], XLIM[1], 5)
         minor_ticks = np.arange(XLIM[0], XLIM[1], 1)
@@ -588,10 +610,13 @@ class CwaEvaluator:
         # ax.set_yticks(major_y_ticks)
         ax.set_yticks(minor_y_ticks, minor=True)
 
+        ax.set_ylabel("Abstand in Meter")
+        ax.set_xlabel("Simulationszeit in Sekunde")
+
         ax.grid(which='minor', alpha=0.1)
         ax.grid(which='major', alpha=0.3)
 
-        plt.legend(loc="lower right")
+        plt.legend(loc="upper right")
         plt.tight_layout()
         plt.show()
 
@@ -602,8 +627,12 @@ class CwaEvaluator:
             elif self.vehicles[vehicle_id].get_type() == "car":
                 car = self.vehicles[vehicle_id]
 
-        fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(5, 5),
-                               gridspec_kw={'height_ratios': [2, 2, 2]}, sharex=True)
+        # fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(5, 5),
+        #                        gridspec_kw={'height_ratios': [2, 2, 2]}, sharex=True)
+
+        fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(5, 4), dpi=200,
+                               gridspec_kw={'height_ratios': [2, 2, 4]}, sharex=True)
+
         fig.subplots_adjust(hspace=0)
 
         ax1 = ax[0]
@@ -615,12 +644,10 @@ class CwaEvaluator:
         ax1.scatter(bike.cwa.danger_zones[car.vehicle_id].update_times,
                     bike.cwa.danger_zones[car.vehicle_id].danger_value, c="darkblue")
         ax1.set_ylim([0, 205])
-        # ax1.set_ylabel("Summer der DangerValue")
 
         ax2.scatter(bike.cwa.danger_zones[car.vehicle_id].update_times,
                     bike.cwa.danger_zones[car.vehicle_id].diff_in_ttc, c="darkblue")
         ax2.set_ylim([0, 10])
-        # ax2.set_ylabel("Differenz der TTC in Sekunden")
 
         # warning status
         warning_status_bike = []
@@ -655,20 +682,26 @@ class CwaEvaluator:
         ax3.scatter(bike.cwa.danger_zones[car.vehicle_id].update_times,
                     bike.cwa.danger_zones[car.vehicle_id].prob_collision, c="darkred")
         ax3_2 = ax3.twinx()
-        real_distances_time, real_distances = self.get_real_distances(bike, car)
+        real_distances_time, real_distances = self.get_cam_distances(bike, car)
         ax3_2.plot(real_distances_time, real_distances, color="black", alpha=0.4)
         ax3_2.plot(real_distances_time[real_distances.index(min(real_distances))], min(real_distances),
                    marker="o", markersize=10, color="black", alpha=0.6)
-        # ax3_2.set_ylabel("Abstand in Meter")
 
         plt.text(real_distances_time[real_distances.index(min(real_distances))], min(real_distances),
                  str("  ") + str(round(min(real_distances) - 1.94, 2)))
         ax3.set_ylim([0, 1])
-        # ax3.set_ylabel("Kollisionswahrscheinlichkeit")
-        # ax3.set_xlabel("Zeit in der Simulation in Sekunden")
+
+        ax1.set_ylabel("Summe der \n DangerValue")
+        ax2.set_ylabel("Differenz der \n TTC in Sek.")
+        ax2.set_ylim([0, 10])
+        ax3.set_ylabel("Kollisions- \n wahrscheinlichkeit")
+        ax3.set_xlabel("Zeit in Sekunden")
+        ax3_2.set_ylabel("Abstand in Meter")
+        ax3_2.set_ylim([0, 80])
 
         plt.setp(ax, xlim=[bike.cwa.danger_zones[car.vehicle_id].update_times[0],
                            bike.cwa.danger_zones[car.vehicle_id].update_times[-1] + 5])
+        plt.setp(ax, xlim=[30, 49])
 
         plt.tight_layout()
         plt.show()

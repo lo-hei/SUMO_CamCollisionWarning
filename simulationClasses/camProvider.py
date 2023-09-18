@@ -23,9 +23,9 @@ class CamProvider:
         vehicle_factor_transmission_model = 1
         # max_range_transmission_model should be NONE, otherwise no model is used
         max_range_transmission_model = None
-        self.use_gps_heading = False
-        self.use_gps_speed = False
-        self.use_gps_imu = False
+        self.use_gps_heading = True
+        self.use_gps_speed = True
+        self.use_gps_imu = True
 
         self.update_rate = 1       # in seconds
 

@@ -1,23 +1,3 @@
-#!/usr/bin/env python
-# Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-# Copyright (C) 2009-2023 German Aerospace Center (DLR) and others.
-# This program and the accompanying materials are made available under the
-# terms of the Eclipse Public License 2.0 which is available at
-# https://www.eclipse.org/legal/epl-2.0/
-# This Source Code may also be made available under the following Secondary
-# Licenses when the conditions for such availability set forth in the Eclipse
-# Public License 2.0 are satisfied: GNU General Public License, version 2
-# or later which is available at
-# https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
-# SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
-
-# @file    runner.py
-# @author  Lena Kalleske
-# @author  Daniel Krajzewicz
-# @author  Michael Behrisch
-# @author  Jakob Erdmann
-# @date    2009-03-26
-
 from __future__ import absolute_import
 from __future__ import print_function
 
@@ -69,14 +49,14 @@ def run():
     7: EVALUATE_CWA
     8: EVALUATE_TRANSMISSION
     '''
-    runs = 100
-    evaluation_mode = [7]
+    runs = 1
+    evaluation_mode = [4]
     evaluator = CwaEvaluator(runs=runs, cwa=DangerZonesCWA_v2, evaluation_mode=evaluation_mode,
-                             title="keiner")
+                             title="small radius")
 
     simulationManager = SimulationManager(step_length=step_length,
                                           speed_controller=SPEED_CONTROL, evaluator=evaluator,
-                                          gps_model="GpsModel-city-handlebar",
+                                          gps_model="GpsModel-perfect-handlebar",
                                           transmission_model="TransmissionModel-mosel")
 
     # this script has been called from the command line. It will start sumo as a
