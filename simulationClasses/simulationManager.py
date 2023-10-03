@@ -14,6 +14,11 @@ from simulationClasses.Vehicles.carClass import Car
 from simulationClasses.CollisionWarningAlgorithm.collisionWarningAlgorithm import Risk
 
 
+"""
+Simulation Manager to manage every single Simulation-step
+"""
+
+
 class SimulationManager:
 
     def __init__(self, step_length, speed_controller, evaluator, gps_model, transmission_model):

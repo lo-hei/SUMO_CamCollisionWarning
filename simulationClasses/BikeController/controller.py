@@ -1,3 +1,7 @@
+"""
+Class to change attributes during runtime
+"""
+
 class Controller():
 
     def __init__(self):

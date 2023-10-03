@@ -79,6 +79,11 @@ def calculate_segment_intersection(segment_1, segment_2):
     return x, y
 
 
+"""
+DangerZone - The area of a possible collision
+"""
+
+
 class DangerZone:
 
     def __init__(self, p_1, p_2, time, poc, error_ellipse_1, error_ellipse_2):
@@ -149,10 +154,12 @@ class DangerZone:
         self.zone_width.append([width_a_1 + width_b_2, width_b_1 + width_a_2])
 
         # calculate the four vertices
-        vector_trajectory_1 = (self.get_poc()[0] - self.get_current_pos_1()[0], self.get_poc()[1] - self.get_current_pos_1()[1])
+        vector_trajectory_1 = (
+        self.get_poc()[0] - self.get_current_pos_1()[0], self.get_poc()[1] - self.get_current_pos_1()[1])
         unit_vector_trajectory_1 = np.array(vector_trajectory_1) / np.linalg.norm(vector_trajectory_1)
 
-        vector_trajectory_2 = (self.get_poc()[0] - self.get_current_pos_2()[0], self.get_poc()[1] - self.get_current_pos_2()[1])
+        vector_trajectory_2 = (
+        self.get_poc()[0] - self.get_current_pos_2()[0], self.get_poc()[1] - self.get_current_pos_2()[1])
         unit_vector_trajectory_2 = np.array(vector_trajectory_2) / np.linalg.norm(vector_trajectory_2)
 
         point_1 = np.array(self.get_poc()) + (-1) * unit_vector_trajectory_1 * self.zone_width[-1][0] + \
@@ -234,6 +241,11 @@ class DangerZone:
         return self.current_pos_2[-1]
 
 
+"""
+The Final Version of the DangerZone-CWA
+"""
+
+
 class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
 
     def __init__(self, bike):
@@ -252,8 +264,10 @@ class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
         self.distance_to_attention = 500
         self.side_angle_to_attention = 90
 
+        # reaction-times in s
         self.reaktion_time_bike = 1
         self.reaktion_time_car = 1
+        # break in m/s²
         self.emergency_brake_bike = 6
         self.emergency_brake_car = 7.5
         self.normal_brake_bike = 3
@@ -613,7 +627,8 @@ class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
         ax1 = ax
 
         # plotting bike = own
-        ax1.plot(danger_zone.get_current_pos_1()[0], danger_zone.get_current_pos_1()[1], marker="o", markersize=5, color="green")
+        ax1.plot(danger_zone.get_current_pos_1()[0], danger_zone.get_current_pos_1()[1], marker="o", markersize=5,
+                 color="green")
         ax1.plot(*zip(*pred_path_own), color="green")
         error_ellipse_1 = Ellipse(xy=(danger_zone.get_current_pos_1()[0], danger_zone.get_current_pos_1()[1]),
                                   width=2 * danger_zone.current_error_1[1], height=2 * danger_zone.current_error_1[2],
@@ -621,7 +636,8 @@ class DangerZonesCWA_v2(cwa.CollisionWarningAlgorithm):
         ax1.add_patch(error_ellipse_1)
 
         # plotting car = other
-        ax1.plot(danger_zone.get_current_pos_2()[0], danger_zone.get_current_pos_2()[1], marker="o", markersize=5, color="red")
+        ax1.plot(danger_zone.get_current_pos_2()[0], danger_zone.get_current_pos_2()[1], marker="o", markersize=5,
+                 color="red")
         ax1.plot(*zip(*pred_path_other), color="red")
         error_ellipse_2 = Ellipse(xy=(danger_zone.get_current_pos_2()[0], danger_zone.get_current_pos_2()[1]),
                                   width=2 * danger_zone.current_error_2[1], height=2 * danger_zone.current_error_2[2],

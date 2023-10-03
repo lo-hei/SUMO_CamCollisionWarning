@@ -7,9 +7,9 @@ def gps_error_precision():
     # define data
     x = np.array([0, 0.82, 1.1, 2, 2.2, 3.8, 4, 4.6, 5, 6, 6.25, 7.5, 8, 8.75, 10])
     y_accuracy = np.array(
-        [0.769, 0.752, 0.748, 0.747, 0.779, 0.757, 0.804, 0.721, 0.750, 0.743, 0.648, 0.657, 0.585, 0.660, 0.612])
+        [0.800, 0.820, 0.770, 0.740, 0.810, 0.810, 0.820, 0.750, 0.780, 0.780, 0.700, 0.670, 0.620, 0.680, 0.630])
     y_f1 = np.array(
-        [0.826, 0.811, 0.809, 0.806, 0.827, 0.829, 0.848, 0.803, 0.806, 0.803, 0.712, 0.715, 0.690, 0.733, 0.710])
+        [0.851, 0.866, 0.827, 0.800, 0.853, 0.869, 0.862, 0.825, 0.831, 0.833, 0.758, 0.727, 0.721, 0.750, 0.726])
 
     plt.figure(figsize=(4, 2), dpi=300)
 
@@ -94,9 +94,9 @@ def cam_freq_precision():
     # define data
     x = np.array([0.1, 0.2, 0.5, 1, 2, 5, 10])
     y_accuracy = np.array(
-        [0.405, 0.418, 0.640, 0.748, 0.764, 0.653, 0.610])
+        [0.300, 0.280, 0.570, 0.770, 0.810, 0.770, 0.750])
     y_f1 = np.array(
-        [0.214, 0.170, 0.673, 0.817, 0.825, 0.768, 0.721])
+        [0.146, 0.100, 0.606, 0.835, 0.861, 0.855, 0.832])
 
     fig1, ax1 = plt.subplots(figsize=(4, 2), dpi=200)
 
@@ -110,7 +110,7 @@ def cam_freq_precision():
     ax1.set_xlabel("Übertragungsfrequenz in Hz")
     ax1.set_ylabel("Genauigkeitswert")
 
-    ax1.set_ylim([0.15, 0.9])
+    ax1.set_ylim([0.05, 0.9])
     # convert x-axis to Logarithmic scale
     ax1.set_xscale("log")
     ax1.set_xticks([0.1, 0.2, 0.5, 1, 2, 5, 10])
@@ -141,7 +141,7 @@ def cam_freq_warning_precision():
     ax1.set_xlabel("Übertragungsfrequenz in Hz")
     ax1.set_ylabel("Genauigkeitswert")
 
-    ax1.set_ylim([0.15, 0.9])
+    ax1.set_ylim([0.05, 0.9])
     # convert x-axis to Logarithmic scale
     ax1.set_xscale("log")
     ax1.set_xticks([0.1, 0.2, 0.5, 1, 2, 5, 10])
@@ -196,9 +196,9 @@ def cam_range_precision():
     # define data
     x = np.array([10, 15, 25, 50, 75, 100, 200, 500])
     y_accuracy = np.array(
-        [0.640, 0.760, 0.798, 0.822, 0.804, 0.771, 0.843, 0.788])
+        [0.480, 0.760, 0.790, 0.830, 0.820, 0.810, 0.860, 0.820])
     y_f1 = np.array(
-        [0.509, 0.782, 0.833, 0.864, 0.853, 0.806, 0.892, 0.845])
+        [0.350, 0.782, 0.826, 0.870, 0.866, 0.840, 0.904, 0.870])
 
     fig1, ax1 = plt.subplots(figsize=(4, 2), dpi=200)
 
@@ -212,7 +212,7 @@ def cam_range_precision():
     ax1.set_xlabel("Übertragungsreichweite in Meter")
     ax1.set_ylabel("Genauigkeitswert")
 
-    ax1.set_ylim([0.35, 0.9])
+    ax1.set_ylim([0.25, 0.95])
     # convert x-axis to Logarithmic scale
     ax1.set_xscale("log")
     ax1.set_xlim([8, 600])
@@ -299,8 +299,8 @@ def cam_range_warning_times():
 
 def cam_sensor_accuracy():
     X = ['Accuracy', 'F1-Score', 'Accuracy \n Warnung', 'Accuracy \n Kollision']
-    accuracy = [0.781, 0.788, 0.794, 0.772, 0.802]
-    f1_score = [0.827, 0.837, 0.842, 0.841, 0.848]
+    accuracy = [0.820, 0.780, 0.810, 0.780, 0.810]
+    f1_score = [0.859, 0.831, 0.855, 0.847, 0.855]
     accuracy_warning = [0.61, 0.69, 0.62, 0.59, 0.59]
     accuracy_collision = [0.67, 0.75, 0.69, 0.65, 0.66]
 
@@ -332,8 +332,8 @@ def cam_sensor_accuracy():
 
 def cam_layout_accuracy():
     X = ['Accuracy', 'F1-Score', 'Accuracy \n Warnung', 'Accuracy \n Kollision']
-    accuracy = [0.736, 0.570, 0.596]
-    f1_score = [0.768, 0.626, 0.580]
+    accuracy = [0.810, 0.570, 0.620]
+    f1_score = [0.835, 0.626, 0.604]
     accuracy_warning = [0.54, 0.59, 0.56]
     accuracy_collision = [0.71, 0.74, 0.78]
 
@@ -377,5 +377,5 @@ def cam_layout_accuracy():
 # cam_range_warning_precision()
 # cam_range_warning_times()
 
-cam_sensor_accuracy()
-# cam_layout_accuracy()
+# cam_sensor_accuracy()
+cam_layout_accuracy()

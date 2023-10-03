@@ -33,7 +33,7 @@ import traci  # noqa
 
 def run():
     SPEED_CONTROL = False
-    GUI = False
+    GUI = True
 
     step_length = 0.1
 
@@ -49,10 +49,10 @@ def run():
     7: EVALUATE_CWA
     8: EVALUATE_TRANSMISSION
     '''
-    runs = 1
-    evaluation_mode = [4]
+    runs = 100
+    evaluation_mode = [7]
     evaluator = CwaEvaluator(runs=runs, cwa=DangerZonesCWA_v2, evaluation_mode=evaluation_mode,
-                             title="small radius")
+                             title="")
 
     simulationManager = SimulationManager(step_length=step_length,
                                           speed_controller=SPEED_CONTROL, evaluator=evaluator,

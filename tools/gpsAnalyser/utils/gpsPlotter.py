@@ -60,8 +60,114 @@ class GpsPlotter(GpsAnalyser):
         image.show()
         # image.save(output_path)
 
-    def plot_gps_track_interpolation(self, file_names, dots, interpolation=True, interval=None):
-        plt.figure(figsize=(9, 4))
+    def plot_gps_parameter(self, file_names, interval=None, type="speed_heading"):
+        fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(6, 4), gridspec_kw={'height_ratios': [2, 2]}, dpi=200)
+
+
+        file_1 = self.file_plotter[file_names[0]]
+        file_2 = self.file_plotter[file_names[1]]
+
+        if type == "speed_heading":
+            speed_1 = file_1.get_speed()
+            speed_2 = file_2.get_speed()
+            heading_1 = file_1.get_heading()
+            heading_2 = file_2.get_heading()
+
+            time_1 = file_1.get_times()
+            time_2 = file_2.get_times()
+
+            if not interval is None:
+                speed_1 = speed_1[interval[0]:interval[1]]
+                speed_2 = speed_2[interval[0]:interval[1]]
+                heading_1 = heading_1[interval[0]:interval[1]]
+                heading_2 = heading_2[interval[0]:interval[1]]
+                time_1 = time_1[interval[0]:interval[1]]
+                time_2 = time_2[interval[0]:interval[1]]
+
+            ax[0].plot(time_1, speed_1, label="Geschwindigkeit (GPS am Tretlager)", color="darkblue")
+            ax[0].plot(time_2, speed_2, label="Geschwindigkeit (GPS am Rahmen)", color="darkorange")
+            ax[0].set_ylim([-0.5, 12])
+            ax[1].plot(heading_1, label="GPS_extern")
+            ax[1].plot(heading_2, label="GPS_intern")
+
+            ax[0].legend()
+            ax[1].legend()
+
+        if type == "altitude":
+            altitude_1, altitude_error_1 = file_1.get_altitude_and_error()
+            altitude_2, altitude_error_2 = file_2.get_altitude_and_error()
+
+            time_1 = file_1.get_times()
+            time_2 = file_2.get_times()
+
+            if not interval is None:
+                altitude_1 = altitude_1[interval[0]:interval[1]]
+                altitude_error_1 = altitude_error_1[interval[0]:interval[1]]
+                altitude_2 = altitude_2[interval[0]:interval[1]]
+                altitude_error_2 = altitude_error_2[interval[0]:interval[1]]
+                time_1 = time_1[interval[0]:interval[1]]
+                time_2 = time_2[interval[0]:interval[1]]
+
+            ax[0].plot(time_1, altitude_1, label="GPS_extern")
+            ax[0].plot(time_2, altitude_2, label="GPS_intern")
+            ax[1].plot(time_1, altitude_error_1, label="GPS_extern")
+            ax[1].plot(time_2, altitude_error_2, label="GPS_intern")
+
+            ax[0].legend()
+            ax[1].legend()
+
+        if type == "error":
+            major_1, minor_1, orientation_1 = file_1.get_errors()
+            major_2, minor_2, orientation_2 = file_2.get_errors()
+
+            speed_1 = file_1.get_speed()
+
+            time_1 = file_1.get_times()
+            time_2 = file_2.get_times()
+
+            if not interval is None:
+                major_1 = major_1[interval[0]:interval[1]]
+                minor_1 = minor_1[interval[0]:interval[1]]
+                major_2 = major_2[interval[0]:interval[1]]
+                minor_2 = minor_2[interval[0]:interval[1]]
+                time_1 = time_1[interval[0]:interval[1]]
+                time_2 = time_2[interval[0]:interval[1]]
+                speed_1 = speed_1[interval[0]:interval[1]]
+
+            ax_2 = ax[0].twinx()
+            ax[0].plot(speed_1, label="GPS Geschwindigkeit", color="orange")
+            ax[0].plot([], [], label="Major GPS-Error", color="darkblue")
+            # ax[0].plot(time_2, major_2, label="GPS_intern")
+            ax_2.plot(major_1, label="Major GPS-Error", color="darkblue")
+            # ax[1].plot(time_2, minor_2, label="GPS_intern")
+
+            ax[0].legend(loc="upper left")
+            ax[1].legend()
+
+        if type == "hdop":
+            hdop_1 = file_1.get_hdop()
+            hdop_2 = file_2.get_hdop()
+
+            time_1 = file_1.get_times()
+            time_2 = file_2.get_times()
+
+            if not interval is None:
+                hdop_1 = hdop_1[interval[0]:interval[1]]
+                hdop_2 = hdop_2[interval[0]:interval[1]]
+                time_1 = time_1[interval[0]:interval[1]]
+                time_2 = time_2[interval[0]:interval[1]]
+
+            ax[0].plot(time_1, hdop_1, label="GPS_extern")
+            ax[1].plot(time_2, hdop_2, label="GPS_intern")
+
+            ax[0].legend()
+            ax[1].legend()
+
+        plt.tight_layout()
+        plt.show()
+
+    def plot_gps_track_interpolation(self, file_names, dots, interpolation=True, connection=True, interval=None):
+        plt.figure(figsize=(5, 3))
         color_lines = ["blue", "orange", "green"]
         color_dots = ["darkblue", "darkorange", "darkgreen"]
 
@@ -83,12 +189,14 @@ class GpsPlotter(GpsAnalyser):
                 print(long_new)
                 plt.plot(long_new, lat_new, color=color_lines[i])
 
+            if connection:
+                plt.plot(long, lat, color=color_dots[i], alpha=0.5)
             if dots:
                 plt.scatter(long, lat, s=15, color=color_dots[i])
 
 
-        plt.ylim(min(lat) - 0.0001, max(lat) + 0.0001)
-        plt.xlim(min(long) - 0.0001, max(long) + 0.0001)
+        plt.ylim(min(lat) - 0.00001, max(lat) + 0.00001)
+        plt.xlim(min(long) - 0.00001, max(long) + 0.00001)
         plt.legend()
         plt.xlabel("Latitude")
         plt.ylabel("Longitude")
@@ -96,7 +204,7 @@ class GpsPlotter(GpsAnalyser):
         plt.show()
 
     def plot_gps_error(self, file_name, interval):
-        fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(10, 15), gridspec_kw={'height_ratios': [4, 2, 1]})
+        fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(6, 8), gridspec_kw={'height_ratios': [4, 2, 1]})
 
         file = self.file_plotter[file_name]
 
@@ -143,29 +251,29 @@ class GpsPlotter(GpsAnalyser):
         ax[0].grid()
 
         ax1_twimx = ax[1].twinx()
-        bins = np.arange(0, 20, 1)
+        bins = np.arange(0, 8, 0.2)
 
-        _, bins, patches = ax[1].hist(np.clip(err_semi_major, bins[0], bins[-1]), bins=bins, alpha=0.4, color="orange")
+        _, bins, patches = ax[1].hist(np.clip(err_semi_major, bins[0], bins[-1]), bins=bins, alpha=0.8, color="orange")
 
         patches[-1].set_facecolor('red')
 
-        xlabels = np.arange(0, 20, 2).astype(str)
+        xlabels = np.arange(0, 8, 1).astype(str)
         xlabels[-1] += '+'
 
         N_labels = len(xlabels)
         # ax[1].set_title(str("Time to first GPS-fix:" + file.time_to_gps))
-        ax[1].set_xticks(2 * np.arange(N_labels))
+        ax[1].set_xticks(np.arange(N_labels))
         ax[1].set_xticklabels(xlabels)
-        ax[1].set_xlim([0, 20])
-        ax[1].set_xlabel("GPS-Error in meter")
-        ax[1].set_ylabel("Number of GPS-Points with this error")
+        ax[1].set_xlim([0, 8])
+        ax[1].set_xlabel("GPS-Error in Meter")
+        ax[1].set_ylabel("Anzahl GPS-Punkte \n mit dem Fehler")
 
         density = gaussian_kde(err_semi_major)
         xs = np.linspace(0, 20, 200)
         density.covariance_factor = lambda: .25
         density._compute_covariance()
-        ax1_twimx.plot(xs, density(xs))
-        ax1_twimx.set_ylabel("Percentage of GPS-Points with this error")
+        ax1_twimx.plot(xs, density(xs), color="darkblue")
+        ax1_twimx.set_ylabel("Anteil GPS-Punkte \n mit dem Fehler")
 
         over_20 = len([e for e in err_semi_major if e > 20])
         print(len(errors_time), errors_time)
@@ -185,7 +293,7 @@ class GpsPlotter(GpsAnalyser):
         plt.show()
 
     def plot_gps_error_v2(self, file_name, file_plotter_list, plot_seconds=120):
-        fig = plt.figure(figsize=(6, 3))
+        fig = plt.figure(figsize=(5, 2.5), dpi=200)
 
         min_x_time = 0
         to_plot_time = []
@@ -226,7 +334,7 @@ class GpsPlotter(GpsAnalyser):
             else:
                 avg_err_semi_major = sum(error[pos_error_avg:]) / len(error[pos_error_avg:])
             plt.axhline(avg_err_semi_major, xmin=0.8, linestyle='--', c=str("C" + str(i)),
-                        label=str("average error = " + str(round(avg_err_semi_major, 4))))
+                        label=str(r'$\varnothing$ Error Test ' + str(i + 1) + ' = ' + str(round(avg_err_semi_major, 4))))
 
         for i, time, error in zip(list(range(len(to_plot_time))), to_plot_time, to_plot_error):
             over_20 = len([e for e in error if e > 20])
@@ -237,10 +345,10 @@ class GpsPlotter(GpsAnalyser):
             plt.plot(time[start_alpha-1:], error[start_alpha-1:], c=str("C" + str(i)), alpha=0.4)
 
         plt.xlim([0, min_x_time])
-        plt.ylim([0, 20])
-        plt.ylabel("GPS-Error in meter")
-        plt.xlabel("Time in seconds")
-        plt.legend()
+        plt.ylim([0, 25])
+        plt.ylabel("GPS-Error in Meter")
+        plt.xlabel("Zeit in Sekunden")
+        plt.legend(loc="upper right")
 
         plt.tight_layout()
         plt.show()

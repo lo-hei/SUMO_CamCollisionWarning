@@ -28,11 +28,11 @@ class GpsModelTool(GpsAnalyser):
     def create_model(self, gps_file, model_name):
         gps_model = GpsModel(model_name=model_name)
         self.model = gps_model
-        heatmap, heatmap_size = self.generate_heatmap(gps_file_name=gps_file, plot=False)
+        # heatmap, heatmap_size = self.generate_heatmap(gps_file_name=gps_file, plot=False)
 
-        gps_model.heatmap = heatmap
-        gps_model.heatmap_size = heatmap_size
-        gps_model.gps_frequency = self.detect_gps_frequency(gps_file_name=gps_file, bin_size=0.1, plot=False)
+        # gps_model.heatmap = heatmap
+        # gps_model.heatmap_size = heatmap_size
+        gps_model.gps_frequency = self.detect_gps_frequency(gps_file_name=gps_file, bin_size=0.1, plot=True)
 
         self.analyse_error(gps_file_name=gps_file, plot=False)
         self.model.save_model()
@@ -446,7 +446,14 @@ class GpsModelTool(GpsAnalyser):
     def detect_gps_frequency(self, gps_file_name, bin_size=0.1, plot=True):
         comparison_file = self.file_plotter[gps_file_name]
         comparison_coord, comparison_times = comparison_file.get_coordinates()
-        time_deltas = [comparison_times[n]-comparison_times[n-1] for n in range(1, len(comparison_times))]
+        time_deltas = []
+        last_update_time = comparison_times[0]
+        for i in range(1, len(comparison_times)):
+            if not (comparison_coord[i] == comparison_coord[i - 1]):
+                time_deltas.append(comparison_times[i] - last_update_time)
+                last_update_time = comparison_times[i]
+
+        # time_deltas = [comparison_times[n]-comparison_times[n-1] for n in range(1, len(comparison_times))]
 
         bins = np.arange(bin_size, max(time_deltas), bin_size)
         gps_frequency = {}

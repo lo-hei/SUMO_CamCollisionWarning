@@ -5,6 +5,22 @@ import traci  # noqa
 from simulationClasses.BikeController.controller import Controller
 
 
+def check_for_keyboard_input():
+    if keyboard.is_pressed("w"):
+        print("SPEED UP !!!")
+        return "speed_up"
+    elif keyboard.is_pressed("s"):
+        print("SLOW DOWN !!!")
+        return "slow_down"
+    else:
+        return False
+
+
+"""
+Class to control speed of a vehicle during runtime
+"""
+
+
 class SpeedController(Controller):
 
     def __init__(self):
@@ -19,25 +35,15 @@ class SpeedController(Controller):
                 bikes.append(vehicle_id)
 
         # set speed
-        if self.check_for_keyboard_input() == "speed_up":
+        if check_for_keyboard_input() == "speed_up":
             for bike_id in bikes:
                 current_speed = traci.vehicle.getSpeed(bike_id)
                 print("current speed: ", current_speed)
                 new_speed = current_speed * self.speed_up
                 traci.vehicle.setSpeed(bike_id, new_speed)
-        if self.check_for_keyboard_input() == "slow_down":
+        if check_for_keyboard_input() == "slow_down":
             for bike_id in bikes:
                 current_speed = traci.vehicle.getSpeed(bike_id)
                 print("current speed: ", current_speed)
                 new_speed = current_speed * self.slow_down
                 traci.vehicle.setSpeed(bike_id, new_speed)
-
-    def check_for_keyboard_input(self):
-        if keyboard.is_pressed("w"):
-            print("SPEED UP !!!")
-            return "speed_up"
-        elif keyboard.is_pressed("s"):
-            print("SLOW DOWN !!!")
-            return "slow_down"
-        else:
-            return False

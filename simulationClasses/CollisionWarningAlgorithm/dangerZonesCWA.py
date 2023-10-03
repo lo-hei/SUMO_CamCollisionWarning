@@ -92,6 +92,11 @@ def calculate_segment_intersection(segment_1, segment_2):
     return x, y
 
 
+"""
+DangerZone - The area of a possible collision
+"""
+
+
 class DangerZone:
 
     def __init__(self, p_1, p_2, v_1, v_2, poc, error_ellipse_1, error_ellipse_2):
@@ -201,6 +206,12 @@ class DangerZone:
         width = math.floor(math.dist(self.zone_vertices[0], self.zone_vertices[3]) / self.zone_matrix_resolution_m)
         height = math.floor(math.dist(self.zone_vertices[0], self.zone_vertices[1]) / self.zone_matrix_resolution_m)
         self.zone_matrix = np.zeros(shape=(width, height))
+
+
+"""
+First Version of the DangerZone-CWA
+Due to some problems not used anymore
+"""
 
 
 class DangerZonesCWA(cwa.CollisionWarningAlgorithm):
@@ -475,11 +486,11 @@ class DangerZonesCWA(cwa.CollisionWarningAlgorithm):
                     # adding one centimeter to avoid division by zero
                     danger_zone.zone_matrix[i][j] += (norm_value * danger_value) * \
                                                      1 / (
-                                                                 abs(danger_zone.time_to_poc_1 - danger_zone.time_to_poc_2) + 0.01)
+                                                             abs(danger_zone.time_to_poc_1 - danger_zone.time_to_poc_2) + 0.01)
                 else:
                     danger_zone.zone_matrix[j][i] += (norm_value * danger_value) * \
                                                      1 / (
-                                                                 abs(danger_zone.time_to_poc_1 - danger_zone.time_to_poc_2) + 0.01)
+                                                             abs(danger_zone.time_to_poc_1 - danger_zone.time_to_poc_2) + 0.01)
 
     def calculate_danger_value(self, dist, vehicle_id, speed, acc, extrap_dist, extrap_times):
         if dist > extrap_dist[-1]:

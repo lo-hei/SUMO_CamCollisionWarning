@@ -25,7 +25,7 @@ def run():
     bad_conditions = ["GPS_Test_23_06/GpsCamLog_7",
                       "Transmission_Test_23_06/EVK_1/GpsCamLog_9"]
 
-    gps_cam_log_name = "GPS_Test_23_06/GpsCamLog_7"
+    gps_cam_log_name = "GpsCamLog_204"
     available_files = ["internal_GPS", "externalACM0_GPS", "externalACM1_GPS", "externalACM2_GPS"]
     file_plotter = load_data(gps_cam_log_name=gps_cam_log_name, available_files=available_files)
 
@@ -34,16 +34,17 @@ def run():
     gps_model_tool = GpsModelTool(gps_cam_log_name=gps_cam_log_name, available_files=available_files,
                                   file_plotter=file_plotter, baseline_file="externalACM1_GPS")
 
-    interval = [0, 110]
+    interval = [340, 490]
 
     # gps_plotter.plot_gps_track_on_map("externalACM0_GPS", interval=interval)
-    # gps_plotter.plot_gps_track_interpolation(file_names=["externalACM0_GPS", "externalACM1_GPS"], interval=interval, interpolation=True, dots=True)
+    # gps_plotter.plot_gps_track_interpolation(file_names=["externalACM0_GPS"], interval=interval, interpolation=False, dots=True)
+    gps_plotter.plot_gps_parameter(file_names=["externalACM0_GPS", "internal_GPS"], interval=interval, type="speed_heading")
     # gps_plotter.plot_gps_error(file_name="internal_GPS", interval=interval)
     # gps_plotter.plot_gps_error(file_name="externalACM0_GPS", interval=interval)
     # gps_plotter.plot_gps_error(file_name="externalACM1_GPS", interval=interval)
     # gps_plotter.plot_gps_error(file_name="externalACM2_GPS", interval=interval)
 
-    gps_plotter.plot_avg_error_with_time_to_gps()
+    # gps_plotter.plot_avg_error_with_time_to_gps()
 
     '''
     file_plotter_list = load_data(gps_cam_log_name=bad_conditions,
@@ -57,7 +58,7 @@ def run():
     ''' styles = [histogram, map, drift, heatmap] '''
     # gps_plotter.plot_gps_deviation(baseline="externalACM0_GPS", comparison="externalACM0_GPS", style="map")
 
-    # gps_model_tool.create_model(gps_file="externalACM0_GPS", model_name="GpsModel-bad-bb")
+    # gps_model_tool.create_model(gps_file="externalACM0_GPS", model_name="GpsModel-cwaTestSlow-bb")
     # gps_model_tool.create_model(gps_file="externalACM2_GPS", model_name="GpsModel-bad-handlebar")
 
     # gps_model_tool.use_model(model_name="GpsModel-bad-bottombracket", seconds_to_simulate=25)
@@ -77,7 +78,8 @@ def load_data(gps_cam_log_name, available_files):
         root_path = current_path.parent.parent.__str__()
 
         for file in available_files:
-            file_path = root_path + "\\src\\gpsData" + "\\" + n + "\\" + file + ".csv"
+            file_path = root_path + "\\src\\cwaData\\CollisionTest_Fast\Bike-bb\\" + n + "\\" + file + ".csv"
+            # file_path = root_path + "\\src\\gpsData\\" + n + "\\" + file + ".csv"
             print(file_path)
             if os.path.exists(file_path):
                 print("GpsModelCreator : found ", n + "\\" + file)

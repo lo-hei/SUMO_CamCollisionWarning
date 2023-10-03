@@ -21,6 +21,11 @@ def shift_position(old_lat, old_lon, shift_m_lat, shift_m_long):
     return end[0], end[1]
 
 
+"""
+Final Version of the GPS-Model
+"""
+
+
 class SimpleGpsModel(GpsModel):
     def __init__(self, model_name, vehicle_id, vehicle_factor):
         super(SimpleGpsModel, self).__init__(model_name)

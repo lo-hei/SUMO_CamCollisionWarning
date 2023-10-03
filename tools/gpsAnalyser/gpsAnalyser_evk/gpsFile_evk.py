@@ -89,13 +89,32 @@ class GpsFile:
 
         return coordinates, times, errors
 
-    def get_heading_error(self):
-        heading_error = list(self.gps_data['err_move_direction_horizontal'].values)
-        return heading_error
+    def get_errors(self):
+        major = list(self.gps_data['err_semi_major'].values)
+        minor = list(self.gps_data['error_semi_minor'].values)
+        orientation = list(self.gps_data['err_major'].values)
+        return major, minor, orientation
 
-    def get_speed_error(self):
-        speed_error = list(self.gps_data['error_move_speed_horizontal'].values)
-        return speed_error
+    def get_times(self):
+        times = self.gps_data['gps_time'].values
+        return times
+
+    def get_heading(self):
+        heading = list(self.gps_data['move_direction_horizontal'].values)
+        return heading
+
+    def get_speed(self):
+        speed = list(self.gps_data['move_speed_horizontal'].values)
+        return speed
+
+    def get_altitude_and_error(self):
+        altitude = list(self.gps_data['altitude'].values)
+        altitude_error = list(self.gps_data['err_altitude'].values)
+        return altitude, altitude_error
+
+    def get_hdop(self):
+        hdop = list(self.gps_data['hdop'].values)
+        return hdop
 
     def get_image_coordinates(self):
         img_points = []

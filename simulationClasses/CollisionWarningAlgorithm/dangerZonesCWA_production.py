@@ -86,6 +86,13 @@ def extrapolate_movement(t_0, lat_0, lon_0, head, times: list, speed: list, acc:
     return extrap_lat, extrap_lon
 
 
+"""
+adapted Version of the DangerZone-CWA
+This simpler not-object-orientated-version is not using a seperated Class for the DangerZone
+Meant to run on the EVK
+"""
+
+
 class DangerZonesCWA_production(cwa.CollisionWarningAlgorithm):
 
     def __init__(self, bike):

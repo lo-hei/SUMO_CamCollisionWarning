@@ -4,11 +4,21 @@ import traci  # noqa
 
 import simulationClasses.Vehicles.vehicleClass as v
 
+"""
+ENUM for warning-levels
+"""
+
 
 class Risk(enum.Enum):
     NoRisk = 0
     Warning = 1
     Collision = 2
+
+
+"""
+Collision Warning Algorithm with important attributes
+Basic Class
+"""
 
 
 class CollisionWarningAlgorithm:
@@ -17,9 +27,9 @@ class CollisionWarningAlgorithm:
         self.bike = bike
         self.warning_status = Risk.NoRisk
         self.last_warning = {"time": 0, "warning": Risk.NoRisk}
-        self.minimal_duration_warning = 3   # in sec
-        self.risk_assessment = {}           # {vehicle_id: Risk}
-        self.risk_assessment_history = []   # [[time, risk_assessment], [] ... ]
+        self.minimal_duration_warning = 3  # in sec
+        self.risk_assessment = {}  # {vehicle_id: Risk}
+        self.risk_assessment_history = []  # [[time, risk_assessment], [] ... ]
 
     def get_current_risk(self) -> Risk:
         highest_risk = Risk.NoRisk

@@ -2,9 +2,11 @@ import os
 from pathlib import Path
 
 import geopy.distance
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.signal import find_peaks
 from scipy.stats import gaussian_kde
 
 
@@ -68,16 +70,15 @@ class CwaPlotter:
             self.cwa_df = df
 
     def plot_prob_collision(self):
-        fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(5, 4), dpi=200,
+        fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(5, 5), dpi=200,
                                gridspec_kw={'height_ratios': [2, 2, 4]}, sharex=True)
         # fig.subplots_adjust(hspace=0)
 
-        # x_lim = [0, 15]
+        x_lim = [0, 15]
 
         ax1 = ax[0]
         ax2 = ax[1]
         ax3 = ax[2]
-        ax3_2 = ax3.twinx()
 
         time = list(self.cwa_df.loc[:, "current_time"])
         # convert to seconds with start at 0
@@ -114,20 +115,11 @@ class CwaPlotter:
             d = distance_earth(lat_own[i], lon_own[i], lat_other[i], lon_other[i])
             distance_vehicles.append(d)
 
-        ax3_2.plot(time, distance_vehicles, color="black", alpha=0.4)
-        ax3_2.plot(time[distance_vehicles[x_lim[0]*10:x_lim[1]*10].index(min(distance_vehicles[x_lim[0]*10:x_lim[1]*10]))],
-                   min(distance_vehicles[x_lim[0]*10:x_lim[1]*10]),
-                   marker="o", markersize=10, color="black", alpha=0.6)
-        plt.text(time[distance_vehicles[x_lim[0]*10:x_lim[1]*10].index(min(distance_vehicles[x_lim[0]*10:x_lim[1]*10]))],
-                 min(distance_vehicles[:140]),
-                 str("  ") + str(round(min(distance_vehicles) - 1.94, 2)))
-
         ax1.set_ylabel("Summe der \n DangerValue")
         ax2.set_ylabel("Differenz der \n TTC in Sek.")
         ax2.set_ylim([0, 10])
         ax3.set_ylabel("Kollisions- \n wahrscheinlichkeit")
         ax3.set_xlabel("Zeit in Sekunden")
-        ax3_2.set_ylabel("Abstand in Meter")
 
         plt.tight_layout()
         if x_lim:
@@ -181,7 +173,10 @@ class CwaPlotter:
 
         fig, ax3 = plt.subplots(figsize=(4, 4))
 
-        ax3.imshow(confusion_matrix, cmap='Greens')
+        norm = plt.Normalize(-2, 2)
+        cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white", "#c8c8c8", "#ff6b00"])
+
+        ax3.imshow(confusion_matrix, cmap=cmap)
         # Show all ticks and label them with the respective list entries
         ax3.set_xticks(np.arange(len(real_labels)), labels=real_labels)
         ax3.set_yticks(np.arange(len(cwa_labels)), labels=cwa_labels, rotation=90, va="center")
@@ -199,22 +194,17 @@ class CwaPlotter:
         plt.show()
 
     def evaluate_tests(self):
-        time = list(self.cwa_df.loc[:, "current_time"])
-        # convert to seconds with start at 0
-        time = [(t - time[0]) / 1000000 for t in time]
-
-        delta_time = [time[i] - time[i-1] for i in range(1, len(time))]
-        plt.plot(time[1:], delta_time)
-
         df_warning = self.cwa_df.loc[(self.cwa_df["risk"] == "Warning")]
         time_warning = []
         for i, row in df_warning.iterrows():
             time_warning.append(row["distance_to_poc_own"] / row["current_speed_own"])
         print("time_warning: ", time_warning)
 
-        time = list(self.cwa_df.loc[:, "current_time"])
+        current_time = list(self.cwa_df.loc[:, "current_time"])
         # convert to seconds with start at 0
-        time = [(t - time[0]) / 1000000 for t in time]
+        time = [(t - current_time[0]) / 1000000 for t in current_time]
+
+        # time = [(lambda i: t - 100 if t > 100 else t)(i)for t in time]
 
         danger_value = []
         speed_own = list(self.cwa_df.loc[:, "current_speed_own"])
@@ -222,7 +212,7 @@ class CwaPlotter:
         for i in range(len(distance_to_poc_own)):
             dv = calculate_danger_value(dist_to_poc=distance_to_poc_own[i], dangerZone_width=1, speed=speed_own[i],
                                         normal_brake_distance=6, emergency_brake_distance=3)
-            danger_value.append(dv * 2.5)
+            danger_value.append(dv * 2.2)
 
         diff_ttc = list(self.cwa_df.loc[:, "diff_ttc"])
 
@@ -243,16 +233,73 @@ class CwaPlotter:
             d = distance_earth(lat_own[i], lon_own[i], lat_other[i], lon_other[i])
             distance_vehicles.append(d)
 
-        fig = plt.figure(figsize=(8, 2), dpi=200)
+        # find intervalls for test-runs
+        peaks, _ = find_peaks(distance_vehicles, distance=5)
+        peaks = np.append(peaks, len(distance_vehicles) - 1)
+        print("time_intervalls_test_runs", peaks)
+
+        # filter for only highest Value in on test
+        highest_prob_in_run = []
+        highest_time_in_run = []
+        time_to_poc_own = list(self.cwa_df.loc[:, "time_to_poc_own"])
+        print("time_to_poc_own before:", time_to_poc_own)
+
+        plt.plot(time_to_poc_own)
+        plt.show()
+
+        # correction of time_to_poc_own
+        time_to_poc_own = [(current_time[i] + t_poc) / 1000000 for i, t_poc in enumerate(time_to_poc_own)]
+
+        plt.plot(time_to_poc_own)
+        plt.xlim([0, 50])
+        plt.show()
+
+        print("time_to_poc_own after:", time_to_poc_own)
+        warning_time = []
+        collision_time = []
+        for i, p in enumerate(peaks):
+            if i == 0:
+                start = 0
+            else:
+                start = peaks[i - 1]
+
+            time_to_poc_testrun = time_to_poc_own[start:p]
+            for i_testrun, p_testrun in enumerate(prob_collision[start:p]):
+                if p > 0.45:
+                    warning_time.append(time_to_poc_testrun[i_testrun])
+                    break
+            for i_testrun, p_testrun in enumerate(prob_collision[start:p]):
+                if p > 0.7:
+                    collision_time.append(time_to_poc_testrun[i_testrun])
+                    break
+
+            highest_prob_in_run.append(max(prob_collision[start:p]))
+            highest_time_in_run.append(time[start + prob_collision[start:p].index(highest_prob_in_run[-1])])
+
+        print("warning_time:", warning_time)
+        print("collision_time:", collision_time)
+
+        fig = plt.figure(figsize=(8, 2.5), dpi=200)
         ax = fig.add_subplot(111)
         ax_2 = ax.twinx()
 
         ax.set_ylim([0, 1.1])
-        ax.fill_between(x=time, y1=0.4, y2=0.7, color="yellow", alpha=0.2)
-        ax.fill_between(x=time, y1=0.7, y2=1.1, color="red", alpha=0.2)
-        ax.scatter(time, prob_collision, color="darkred")
+        ax_2.plot(time, distance_vehicles, color="grey", alpha=0.8)
 
-        ax_2.plot(time, distance_vehicles, color="grey")
+        # plot intervalls
+        for i, p in enumerate(peaks):
+            if i in [7, 17]:
+                ax.axvline(x=time[p], color='black', ls="--", alpha=0.8, linewidth=2)
+            else:
+                ax.axvline(x=time[p], color='black', ls="--", alpha=0.2, linewidth=1.5)
 
+        ax.fill_between(x=time, y1=0.4, y2=0.7, color="#c8c8c8", alpha=0.4)
+        ax.fill_between(x=time, y1=0.7, y2=1.1, color="#ff6b00", alpha=0.4)
+        # ax.scatter(time, prob_collision, color="darkred")
+        ax.scatter(highest_time_in_run, highest_prob_in_run, color="black")
+
+        ax.set_ylabel("Kollisions- \n wahrscheinlichkeit")
+        ax_2.set_ylabel("Abstand in Meter")
+        ax.set_xlabel("Zeit in Sekunden")
         plt.tight_layout()
         plt.show()
